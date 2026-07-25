@@ -1,0 +1,51 @@
+/// Bridge table linking resources to their tag key/value pairs, enabling cost attribution by custom tags.
+table ResourceTag
+	lineageTag: caae3f50-82f8-4f30-90c7-f56dabf47be9
+
+	/// Foreign key linking to the Resource table. Hidden; used only for model relationships.
+	column 'Resource Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 16abfd80-22dc-46e7-9a7a-3580ffb4d7ab
+		summarizeBy: none
+		sourceColumn: resource_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Foreign key linking to the Tag table. Hidden; used only for model relationships.
+	column 'Tag Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 1cfff5a0-e2e3-4851-aee9-a4d407ece6da
+		summarizeBy: none
+		sourceColumn: tag_key_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Value assigned to the tag key for the associated resource.
+	column 'Tag Value'
+		dataType: string
+		lineageTag: b75d39b3-4075-4462-8772-7068ebec263a
+		summarizeBy: none
+		sourceColumn: tag_value_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ResourceTag = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vr_pbi_resource_tag_View = Source{[Name="vr_pbi_resource_tag",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vr_pbi_resource_tag_View,{"resource_id", "tag_key_id", "tag_value_lb"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

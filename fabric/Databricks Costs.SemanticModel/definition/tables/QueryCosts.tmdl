@@ -1,0 +1,343 @@
+/// Fact table with one row per SQL statement execution (Databricks query history), carrying the statement's allocated share of warehouse cost. Cost is attributed by billable-duration share of the warehouse's daily cost. Source: dataplatform_usage.vf_pbi_query_cost.
+table QueryCosts
+	lineageTag: a895089e-9dd5-46aa-b722-0c2414a4dcb9
+
+	/// Unique identifier of the statement execution in Databricks query history.
+	column 'Statement ID'
+		dataType: string
+		lineageTag: 5f23d4a6-c3e2-49ee-b4d4-08289d49b1e0
+		summarizeBy: none
+		sourceColumn: statement_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date the statement was executed. Relates to the Calendar dimension.
+	column 'Usage Date'
+		dataType: dateTime
+		formatString: Short Date
+		lineageTag: 894be7e4-b96f-48fc-96bd-63fe0c361ce2
+		summarizeBy: none
+		sourceColumn: usage_dt
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Databricks account identifier the execution belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 1b548d4d-a392-40b0-a377-e4ffce3edeb5
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Surrogate key to the Workspace dimension (-3 when the workspace is unknown). Hidden; used only for the model relationship.
+	column 'Workspace Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 88c99adf-00e5-4ca9-8880-9c63eb6bddb4
+		summarizeBy: none
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Surrogate key to the Resource dimension, resolved to the executing SQL warehouse (-6 when the warehouse is unknown). Hidden; used only for the model relationship.
+	column 'Resource Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 16dbf799-2e38-46db-b990-36652b331339
+		summarizeBy: none
+		sourceColumn: resource_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Surrogate key to the Identity dimension for the executing user or service principal (-2 when no identity, -1 when unknown). Hidden; used only for the model relationship.
+	column 'Identity Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d3257c6c-d72e-422d-8747-48ff642d85d1
+		summarizeBy: none
+		sourceColumn: identity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the SQL warehouse that executed the statement.
+	column 'Warehouse ID'
+		dataType: string
+		lineageTag: 91873b87-3dcc-4ce9-a386-d0f904b1778b
+		summarizeBy: none
+		sourceColumn: warehouse_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Username or service-principal application ID that ran the statement.
+	column 'Executed By'
+		dataType: string
+		lineageTag: 74b6e331-2e35-4166-9dd5-5d71003dd0f9
+		summarizeBy: none
+		sourceColumn: executed_by_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// SQL statement type, e.g. SELECT, INSERT, MERGE.
+	column 'Statement Type'
+		dataType: string
+		lineageTag: 1261383b-2e11-44cf-8f62-b17f67d712bd
+		summarizeBy: none
+		sourceColumn: statement_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Final execution state of the statement, e.g. FINISHED, FAILED, CANCELED.
+	column 'Execution Status'
+		dataType: string
+		lineageTag: 18e4a0dc-d5ad-4dc4-a5c5-10671593718a
+		summarizeBy: none
+		sourceColumn: execution_status_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Client application that submitted the statement, e.g. Power BI, dbt, SQL editor.
+	column 'Client Application'
+		dataType: string
+		lineageTag: e2a51f3a-2f6b-4ddb-8c80-922d97a7d80a
+		summarizeBy: none
+		sourceColumn: client_application_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Connector or driver used by the client, e.g. JDBC, ODBC, Go driver.
+	column 'Client Driver'
+		dataType: string
+		lineageTag: 38b08589-87f5-4f6a-93be-93deccf33d94
+		summarizeBy: none
+		sourceColumn: client_driver_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Yes when the result was served from the result cache (no warehouse compute consumed), No otherwise.
+	column 'From Result Cache'
+		dataType: string
+		lineageTag: a38a4612-a5ae-4785-a3cd-88cab8a1fa01
+		summarizeBy: none
+		sourceColumn: from_result_cache_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Timestamp when the statement execution started.
+	column 'Start Time'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 6b361f6b-d36c-43d6-b3e4-041cb99d3607
+		summarizeBy: none
+		sourceColumn: start_dt
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Timestamp when the statement execution ended.
+	column 'End Time'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0840134b-5096-4e1a-9717-ff1428280f7b
+		summarizeBy: none
+		sourceColumn: end_dt
+
+		annotation SummarizationSetBy = Automatic
+
+	/// End-to-end wall-clock duration of the statement in milliseconds.
+	column 'Total Duration (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 450bd7be-9ccb-41c7-b918-2c86c0899b17
+		summarizeBy: sum
+		sourceColumn: total_duration_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Time spent waiting for warehouse compute to be provisioned, in milliseconds.
+	column 'Waiting for Compute (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 38687cc7-0fd0-4896-9a62-a901540fcd6c
+		summarizeBy: sum
+		sourceColumn: waiting_for_compute_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Time spent queued because the warehouse was at capacity, in milliseconds.
+	column 'Waiting at Capacity (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: ce69b434-389f-4ce3-bad6-0c3f22de137e
+		summarizeBy: sum
+		sourceColumn: waiting_at_capacity_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Time spent compiling the statement, in milliseconds.
+	column 'Compilation Duration (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: cf691224-0900-4bbe-a9dc-81bcf30977f7
+		summarizeBy: sum
+		sourceColumn: compilation_duration_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Time spent executing the statement on the warehouse, in milliseconds.
+	column 'Execution Duration (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1d00e195-c964-4dd0-b320-a5ec59ae9033
+		summarizeBy: sum
+		sourceColumn: execution_duration_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Execution time counted for cost attribution, in milliseconds. Numerator of the statement's allocation share.
+	column 'Billable Duration (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 27ff1575-e87c-408e-88ea-4c7ff40d8e90
+		summarizeBy: sum
+		sourceColumn: billable_duration_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Number of rows read by the statement.
+	column 'Read Rows'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5d4a90e3-df13-453e-91d5-908d33311216
+		summarizeBy: sum
+		sourceColumn: read_rows_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Number of rows returned to the client.
+	column 'Produced Rows'
+		dataType: int64
+		formatString: 0
+		lineageTag: ce737daf-2b2b-47e6-aefa-1de6a8f1c470
+		summarizeBy: sum
+		sourceColumn: produced_rows_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Data volume read by the statement, in gigabytes.
+	column 'Read (GB)'
+		dataType: double
+		lineageTag: c27d8eb6-e5fd-4839-b2c5-a4bc93e6cc8a
+		summarizeBy: sum
+		sourceColumn: read_gb_nb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Number of rows written by the statement.
+	column 'Written Rows'
+		dataType: int64
+		formatString: 0
+		lineageTag: ec1a0cc8-827f-495e-bea9-cf5debe238f5
+		summarizeBy: sum
+		sourceColumn: written_rows_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Data volume written by the statement, in gigabytes.
+	column 'Written (GB)'
+		dataType: double
+		lineageTag: 76edcf09-4e15-4e83-b2e3-5545cab97e64
+		summarizeBy: sum
+		sourceColumn: written_gb_nb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Identifier of the originating dashboard, when the statement was issued by one.
+	column 'Dashboard ID'
+		dataType: string
+		lineageTag: 9d9c6433-1898-4498-9706-29357e0ee2bd
+		summarizeBy: none
+		sourceColumn: dashboard_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the originating notebook, when the statement was issued by one.
+	column 'Notebook ID'
+		dataType: string
+		lineageTag: bd27c884-fcd9-472e-a0c1-62afdcc6d6ae
+		summarizeBy: none
+		sourceColumn: notebook_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the originating job, when the statement was issued by one.
+	column 'Job ID'
+		dataType: string
+		lineageTag: df0117e9-c021-49a7-b4a1-1b3faffb8a44
+		summarizeBy: none
+		sourceColumn: job_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the originating Genie space, when the statement was issued by one.
+	column 'Genie Space ID'
+		dataType: string
+		lineageTag: 3abc7278-1107-4e91-a1ed-721a028ab9f9
+		summarizeBy: none
+		sourceColumn: genie_space_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Total daily cost (USD) of the executing warehouse — the allocation base shared across its statements.
+	column 'Warehouse Cost (USD)'
+		dataType: double
+		lineageTag: 45bae255-38a2-4e54-9029-ebc5897fc508
+		summarizeBy: sum
+		sourceColumn: warehouse_cost_usd
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Sum of billable durations across all statements of the warehouse that day, in milliseconds. Denominator of the allocation share.
+	column 'Total Billable (ms)'
+		dataType: int64
+		formatString: 0
+		lineageTag: 5f029520-2446-468b-a1bb-cb3b090bb037
+		summarizeBy: sum
+		sourceColumn: total_billable_ms_nb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Statement's allocated share of the warehouse daily cost: Warehouse Cost x (Billable Duration / Total Billable).
+	column 'Attributed Cost (USD)'
+		dataType: double
+		lineageTag: f39aa8d5-e31a-4078-bb74-d398accff59a
+		summarizeBy: sum
+		sourceColumn: attributed_cost_usd
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition QueryCosts = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vf_pbi_query_cost_View = Source{[Name="vf_pbi_query_cost",Kind="View"]}[Data]
+				in
+				    vf_pbi_query_cost_View
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

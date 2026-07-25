@@ -1,0 +1,78 @@
+/// Reusable UDF that returns a conditional color based on the sign of a comparison metric. Returns red (#D64550) when the value is >= 0 (unfavorable increase in T&E spend) and green (#44D647) when negative (favorable decrease).
+function PeriodComparisonColor =
+		(
+		    _ComparisonMetric : MEASUREREF
+		) =>
+		IF ( _ComparisonMetric >= 0, "#D64550", "#44D647" )
+	lineageTag: 802c8c4b-2fd3-4de6-a918-a24d0de378ec
+
+/// Reusable format string UDF for count/volume measures. Returns a dynamic format string that scales the value (M/K/units) with no currency symbol.
+function FormatValue =
+		(
+		    _Value : DOUBLE
+		) =>
+		VAR _AbsValue = ABS(_Value)
+		RETURN
+		SWITCH (
+		    TRUE (),
+		    _AbsValue >= 1000000, "#,##0,,.0M ",
+		    _AbsValue >= 1000, "#,##0,.0K ",
+		    "#,##0 "
+		)
+	lineageTag: 2cb24780-2a15-4878-b033-6fb18ee7ee10
+
+/// Reusable format string UDF for monetary measures. Returns a dynamic format string that scales the value (M/K/units) and appends the correct currency symbol.
+function FormatCurrencyValue =
+		(
+		    _Value : DOUBLE,
+		    CurrencyTypeId : INT64
+		) =>
+		VAR _CurrencySymbol = "$"
+		VAR _AbsValue = ABS(_Value)
+		RETURN
+		    SWITCH (
+		        TRUE (),
+		        _AbsValue >= 1000000, "#,##0,,.0M " & _CurrencySymbol,
+		        _AbsValue >= 1000, "#,##0,.0K " & _CurrencySymbol,
+		        "#,##0 " & _CurrencySymbol
+		    )
+	lineageTag: 52a6df04-f410-4b23-b54d-e58770a85e6a
+
+/// Reusable UDF that computes the year-over-year percentage change for any measure. Accepts any measure reference, computes its prior-year value via TimeCalculationPriorPeriod, then returns (Current - PP) / PP. Returns BLANK when no single year is selected or when no prior-year data exists.
+function PeriodComparisonPercentage =
+		(
+		    _Metric : MEASUREREF
+		) =>
+		VAR _Current = _Metric
+		VAR _PrioPeriod =
+		    IF (
+		        SELECTEDVALUE ( 'Calendar'[Year] ),
+		        CALCULATE ( _Metric, 'TimeCalculationPriorPeriod'[Time Aggregation] = "Current" ),
+		        BLANK ()
+		    )
+		VAR _YoYChange =
+		    IF (
+		        ISBLANK ( _PrioPeriod ),
+		        BLANK (),
+		        DIVIDE ( _Current - _PrioPeriod, _PrioPeriod, 0 )
+		    )
+		RETURN
+		    IF ( SELECTEDVALUE ( 'Calendar'[Year] ), _YoYChange, BLANK () )
+	lineageTag: 534976bc-b05c-412c-af59-f9bbbe1efa71
+
+/// Reusable UDF that builds a card title showing the latest data date, ignoring all report filters (REMOVEFILTERS with no argument, so slicers on related tables cannot shift the date). Parameters: _Label (display prefix), _Column (date column ref, e.g. 'Costs'[Ingestion Date]), _Format (optional: \"Date\" = MMMM DD, yyyy | \"Month\" = MMMM yyyy, default \"Date\").
+function LatestDataLabel =
+		(
+		    _Label  : STRING,
+		    _Column : COLUMNREF EXPR,
+		    _Format : STRING = "Date"
+		) =>
+		VAR _MaxDate = CALCULATE ( MAX ( _Column ), REMOVEFILTERS () )
+		VAR _Fmt     = IF ( _Format = "Month", "MMMM yyyy", "MMMM DD, yyyy" )
+		RETURN
+		    _Label & " through: " & UNICHAR ( 10 ) & UNICHAR ( 128197 ) & " " & FORMAT ( _MaxDate, _Fmt, USERCULTURE () )
+	lineageTag: 4ef81f1c-3ab2-4934-862d-4486d382f256
+
+function PercentageFormat = () => "(+0%)▲;(-0%)▼;(0%)"
+	lineageTag: 0a362c0f-48ed-4ada-aa3c-d98100e7479c
+

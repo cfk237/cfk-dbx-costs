@@ -1,0 +1,367 @@
+/// Date dimension providing a full range of time attributes for each calendar day: year, quarter, month, week, and day-level columns. All time-based slicers and year-over-year comparisons in the model flow through this table. Joined to the Costs table on Usage Date.
+table Calendar
+	lineageTag: f1de91d0-d693-42be-a743-cfdc01d80b26
+	dataCategory: Time
+
+	/// Full calendar date at day level. Primary join key linking to the Costs table via Usage Date. Hidden; use the date hierarchy or other Calendar columns in visuals.
+	column Date
+		dataType: dateTime
+		isHidden
+		isKey
+		formatString: Short Date
+		lineageTag: 5b411d4c-da4c-4aae-afee-7117a3bcf45d
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Calendar year, e.g. 2024. Used for annual slicing and year-over-year comparisons.
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 7446a21e-f5f4-42c4-ac74-dec91348ac71
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Quarter label including the year for chronological sorting, e.g. Q1.2024.
+	column Quarter
+		dataType: string
+		lineageTag: 48e6b255-5ee8-411b-ac52-66b5defe96ff
+		summarizeBy: none
+		sourceColumn: Quarter
+		sortByColumn: 'Quarter Sort Key'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Quarter number within the year (1–4). Hidden; used as sort key for Quarter of Year.
+	column 'Quarter Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cdfff7a3-7a56-4c12-8285-e5c25f8c7f54
+		summarizeBy: none
+		sourceColumn: Quarter Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Hidden numeric sort key (year × 10 + quarter). Drives chronological ordering of the Quarter column.
+	column 'Quarter Sort Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 273e6f97-52f6-40c0-8bea-832e045fbe2f
+		summarizeBy: none
+		sourceColumn: Quarter Sort Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Quarter of the year without the year context, e.g. Q1. Use for cross-year quarter comparison slicers.
+	column 'Quarter of Year'
+		dataType: string
+		lineageTag: e1c21713-0c9b-47d0-8ab8-2618ecb0fbd5
+		summarizeBy: none
+		sourceColumn: Quarter of Year
+		sortByColumn: 'Quarter Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Numeric month of the year (1–12). Hidden; used as sort key for Month of Year.
+	column 'Month of Year Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d7d37604-9255-4840-bcb1-a4ba248c26f3
+		summarizeBy: none
+		sourceColumn: Month of Year Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Hidden numeric sort key (year × 100 + month). Drives chronological ordering of the Month column.
+	column 'Month Sort Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1913daaf-1dd0-4075-8a96-ab08c26e61fb
+		summarizeBy: none
+		sourceColumn: Month Sort Key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Month name without the year, e.g. January. Use for cross-year month comparison slicers. Sorted by Month of Year Number.
+	column 'Month of Year'
+		dataType: string
+		lineageTag: bfe09808-e599-4703-b9ea-ad482cabd992
+		summarizeBy: none
+		sourceColumn: Month of Year
+		sortByColumn: 'Month of Year Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Month including the year, e.g. January 2023. Use for chronological month-level analysis and drill-down in the Year Hierarchy. Sorted by Month Sort Key.
+	column Month
+		dataType: string
+		lineageTag: 74907c1b-36fd-43ed-9fea-e8f74c44980c
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: 'Month Sort Key'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Position of the month within its quarter (1–3). Hidden; used as sort key for Month of Quarter.
+	column 'Month of Quarter Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d8314085-bcfa-4bf1-aaa1-ad5bcfb4bc9d
+		summarizeBy: none
+		sourceColumn: Month of Quarter Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Month position within the quarter, e.g. QM1, QM2, QM3. Used for intra-quarter month breakdown.
+	column 'Month of Quarter'
+		dataType: string
+		lineageTag: 69625c2d-8a69-4863-8544-4ddb3f01e68c
+		summarizeBy: none
+		sourceColumn: Month of Quarter
+		sortByColumn: 'Month of Quarter Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// ISO week number within the year (1–53). Hidden; used as sort key for Week of Year.
+	column 'Week of Year Number'
+		dataType: int64
+		formatString: 0
+		lineageTag: d15119a1-66f4-4217-b73c-c998ec7ce13a
+		summarizeBy: none
+		sourceColumn: Week of Year Number
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Hidden numeric sort key (year × 100 + week number). Drives chronological ordering of the Week column.
+	column 'Week Sort Key'
+		dataType: int64
+		formatString: 0
+		lineageTag: 0545480b-332f-4183-9f83-9b2a939a01ff
+		summarizeBy: none
+		sourceColumn: Week Sort Key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// ISO week number without the year context, e.g. W50. Use for cross-year week comparison slicers. Sorted by Week of Year Number.
+	column 'Week of Year'
+		dataType: string
+		lineageTag: 6c71a8bf-e08f-4922-a90a-6d6f960eb17c
+		summarizeBy: none
+		sourceColumn: Week of Year
+
+		annotation SummarizationSetBy = Automatic
+
+	/// ISO week including the year, e.g. 2023-W50. Use for chronological week-level analysis. Sorted by Week Sort Key.
+	column Week
+		dataType: string
+		lineageTag: e0e69154-85e1-475a-8a98-9a821dd22ea0
+		summarizeBy: none
+		sourceColumn: Week
+		sortByColumn: 'Week Sort Key'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Week position within the quarter as a number. Hidden; used as sort key for Week of Quarter.
+	column 'Week of Quarter Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 72fd3a0b-9d84-4f7a-aa4f-a091db1dec1a
+		summarizeBy: none
+		sourceColumn: Week of Quarter Number
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Week position within the quarter, e.g. QW10. Used for intra-quarter week breakdown.
+	column 'Week of Quarter'
+		dataType: string
+		lineageTag: ea1b4dc5-2ac0-433b-a951-97899bb7af86
+		summarizeBy: none
+		sourceColumn: Week of Quarter
+		sortByColumn: 'Week of Quarter Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Week position within the month as a number. Hidden; used as sort key for Week of Month.
+	column 'Week of Month Number'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a8fd971-be78-4820-ba09-2c8fc02e5919
+		summarizeBy: none
+		sourceColumn: Week of Month Number
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Week position within the month, e.g. MW2. Used for intra-month week breakdown.
+	column 'Week of Month'
+		dataType: string
+		lineageTag: 42ce1b33-8cd4-4f1f-b194-1ccd74265886
+		summarizeBy: none
+		sourceColumn: Week of Month
+		sortByColumn: 'Week of Month Number'
+
+		changedProperty = SortByColumn
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Day number within the year (1–366). Used for day-of-year trend analysis across different years.
+	column 'Day of Year'
+		dataType: int64
+		formatString: 0
+		lineageTag: b76ed83a-7be0-4f66-8fc0-561d0f31f317
+		summarizeBy: none
+		sourceColumn: Day of Year
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Day number within the quarter (1–92). Used for intra-quarter day-level analysis.
+	column 'Day of Quarter'
+		dataType: int64
+		formatString: 0
+		lineageTag: 6d77a130-faf3-4fec-a8d3-b3b22f4ea514
+		summarizeBy: none
+		sourceColumn: Day of Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Day number within the month (1–31). Used for intra-month day-level analysis.
+	column 'Day of Month'
+		dataType: int64
+		formatString: 0
+		lineageTag: 84165840-1411-48ae-ac83-5f0124703326
+		summarizeBy: none
+		sourceColumn: Day of Month
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Day of the week as a number: 1 = Monday, 7 = Sunday. Used for correct sorting of Day of Week Name.
+	column 'Day of Week'
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b6de974-4766-45a3-a117-8fdf02431eaa
+		summarizeBy: none
+		sourceColumn: Day of Week
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Full name of the day of the week, e.g. Monday. Sorted by Day of Week for correct chronological ordering in visuals.
+	column 'Day of Week Name'
+		dataType: string
+		lineageTag: 296c9b5d-7926-493a-b97c-7b66fccc899f
+		summarizeBy: none
+		sourceColumn: Day of Week Name
+
+		annotation SummarizationSetBy = Automatic
+
+	hierarchy 'Year Hierarchy'
+		lineageTag: 78c33a21-4181-4af3-a575-1959d7aef2ff
+
+		level Year
+			lineageTag: 98994fb6-71f0-48f8-8b52-651856e875dd
+			column: Year
+
+		level Quarter
+			lineageTag: 7a2bae6b-d570-48b5-8005-ca686370b0bf
+			column: Quarter
+
+		level Month
+			lineageTag: 8083e6e4-709c-47cb-a86c-45b9297da1ed
+			column: Month
+
+		level Date
+			lineageTag: 4233458a-8443-4a87-9043-4ff0725b7678
+			column: Date
+
+	hierarchy 'Calendar Hierarchy'
+		lineageTag: dbae589f-57ae-43cd-b505-912c76e6972d
+
+		level Year
+			lineageTag: 4e08a5e3-c6a8-4b7f-a5fe-073051f3dcc9
+			column: Year
+
+		level 'Quarter of Year'
+			lineageTag: 8d1444b7-2fcd-44ef-a313-fe33696674a9
+			column: 'Quarter of Year'
+
+		level 'Month of Year'
+			lineageTag: 9bd0abc4-75bd-4d59-9893-d163f6c2667b
+			column: 'Month of Year'
+
+		level Date
+			lineageTag: 1fea2d20-a9ca-4daf-9b12-65033832e01c
+			column: Date
+
+	partition Calendar = m
+		mode: import
+		source =
+				let
+				    StartDateCalendar = let StartDateCalendar = _DatesPoints[StartDate]{0} in StartDateCalendar,
+				    EndDateCalendar = let EndDateCalendar = _DatesPoints[EndDate]{0} in EndDateCalendar,
+				    Source = fn_Calendar(StartDateCalendar, EndDateCalendar)
+				in
+				    Source
+
+	calendar Gregorian
+		lineageTag: 87bdf32e-d00d-4df1-aa5d-4d49c155ca55
+
+		calendarColumnGroup = year
+			primaryColumn: Year
+
+		calendarColumnGroup = quarter
+			primaryColumn: Quarter
+
+		calendarColumnGroup = quarterOfYear
+			primaryColumn: 'Quarter of Year'
+
+		calendarColumnGroup = month
+			primaryColumn: Month
+
+		calendarColumnGroup = monthOfYear
+			primaryColumn: 'Month of Year'
+
+		calendarColumnGroup = week
+			primaryColumn: Week
+
+		calendarColumnGroup = date
+			primaryColumn: Date
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

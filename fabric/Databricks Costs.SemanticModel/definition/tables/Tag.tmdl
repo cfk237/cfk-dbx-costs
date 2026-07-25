@@ -1,0 +1,40 @@
+/// Dimension table containing the distinct set of resource tag keys used for tag-based cost attribution.
+table Tag
+	lineageTag: a29192a1-c750-4827-be1b-a3b94dde12c1
+
+	/// Surrogate key uniquely identifying each tag key row. Hidden; used only for model relationships.
+	column 'Tag Key'
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 76b09066-70f3-4297-8c79-bb799517a992
+		summarizeBy: none
+		sourceColumn: tag_key_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Name of the tag key, e.g. team, project, or environment.
+	column 'Tag Name'
+		dataType: string
+		lineageTag: abb38c87-9235-4025-b95a-016b8abe09c1
+		summarizeBy: none
+		sourceColumn: tag_key_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Tag = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vd_pbi_tag_key_View = Source{[Name="vd_pbi_tag_key",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vd_pbi_tag_key_View,{"tag_key_id", "tag_key_cd"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

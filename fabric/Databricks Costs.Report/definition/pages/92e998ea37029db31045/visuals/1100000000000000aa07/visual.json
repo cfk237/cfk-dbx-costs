@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "1100000000000000aa07",
+  "position": {
+    "x": 1140,
+    "y": 80,
+    "z": 7000,
+    "height": 160,
+    "width": 380,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Avg Daily Cost (USD)"
+                }
+              },
+              "queryRef": "KPIs.Avg Daily Cost (USD)",
+              "nativeQueryRef": "Avg Daily Cost (USD)",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,46 @@
+name: Databricks Create Volume
+description: Creates a Unity Catalog managed volume and an optional list of folders inside it.
+
+inputs:
+  catalog-name:
+    description: "Unity Catalog name (e.g. finance_staging)"
+    required: true
+  schema-name:
+    description: "Schema name inside the catalog"
+    required: true
+  name:
+    description: "Volume name to create"
+    required: true
+  folders:
+    description: "Newline-separated list of sub-folders to create inside the volume (optional)"
+    required: false
+    default: ""
+  profile:
+    description: "Databricks CLI profile to use"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Create volume
+      shell: bash
+      run: |
+        databricks volumes create \
+          "${{ inputs.catalog-name }}" \
+          "${{ inputs.schema-name }}" \
+          "${{ inputs.name }}" \
+          MANAGED \
+          --profile ${{ inputs.profile }} \
+          || echo "Volume already exists, skipping"
+
+    - name: Create folders
+      if: ${{ inputs.folders != '' }}
+      shell: bash
+      run: |
+        VOLUME_BASE="dbfs:/Volumes/${{ inputs.catalog-name }}/${{ inputs.schema-name }}/${{ inputs.name }}"
+        while IFS= read -r folder; do
+          [ -z "$folder" ] && continue
+          databricks fs mkdir "${VOLUME_BASE}/${folder}" \
+            --profile ${{ inputs.profile }} \
+            || echo "Folder ${folder} already exists, skipping"
+        done <<< "${{ inputs.folders }}"

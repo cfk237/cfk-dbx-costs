@@ -1,0 +1,401 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "0a8bc80eb9931680ee54",
+  "position": {
+    "x": 0,
+    "y": 68.111217641418989,
+    "z": 4000,
+    "height": 349.76030680728667,
+    "width": 1491.0834132310642,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Calendar"
+                    }
+                  },
+                  "Property": "Month"
+                }
+              },
+              "queryRef": "Calendar.Month",
+              "nativeQueryRef": "Month",
+              "active": true
+            }
+          ]
+        },
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Apps"
+                    }
+                  },
+                  "Property": "Domain"
+                }
+              },
+              "queryRef": "Apps.Domain",
+              "nativeQueryRef": "Domain",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Apps"
+                    }
+                  },
+                  "Property": "Sub Domain"
+                }
+              },
+              "queryRef": "Apps.Sub Domain",
+              "nativeQueryRef": "Sub Domain",
+              "active": false
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Apps"
+                    }
+                  },
+                  "Property": "Application"
+                }
+              },
+              "queryRef": "Apps.Application",
+              "nativeQueryRef": "Application",
+              "active": false
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Total Cost (USD)"
+                }
+              },
+              "queryRef": "KPIs.Total Cost (USD)",
+              "nativeQueryRef": "Total Cost (USD)",
+              "displayName": "Total Cost (USD)"
+            }
+          ],
+          "fieldParameters": [
+            {
+              "parameterExpr": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "CostOrUsage"
+                    }
+                  },
+                  "Property": "CostOrUsage"
+                }
+              },
+              "index": 0,
+              "length": 1
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "isDefaultSort": true
+      }
+    },
+    "expansionStates": [
+      {
+        "roles": [
+          "Rows"
+        ],
+        "levels": [
+          {
+            "queryRefs": [
+              "Apps.Domain"
+            ],
+            "isCollapsed": true,
+            "identityKeys": [
+              {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Apps"
+                    }
+                  },
+                  "Property": "Domain"
+                }
+              }
+            ],
+            "isPinned": true
+          },
+          {
+            "queryRefs": [
+              "Apps.Sub Domain"
+            ],
+            "isCollapsed": true,
+            "identityKeys": [
+              {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Apps"
+                    }
+                  },
+                  "Property": "Sub Domain"
+                }
+              }
+            ],
+            "isPinned": true
+          },
+          {
+            "queryRefs": [
+              "Apps.Application"
+            ],
+            "isCollapsed": true,
+            "isPinned": true
+          }
+        ],
+        "root": {
+          "children": [
+            {
+              "identityValues": [
+                {
+                  "Literal": {
+                    "Value": "null"
+                  }
+                }
+              ],
+              "children": [
+                {
+                  "identityValues": [
+                    {
+                      "Literal": {
+                        "Value": "'#NA'"
+                      }
+                    }
+                  ],
+                  "isToggled": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "visualContainerObjects": {
+      "general": [
+        {
+          "properties": {
+            "keepLayerOrder": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "parentGroupName": "f8d5286b9200098d73a2",
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "114f62f8909830ecc96c",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Apps"
+              }
+            },
+            "Property": "Domain"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "21224d907ab046d86192",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Apps"
+              }
+            },
+            "Property": "Sub Domain"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "d373565c090ae5939313",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Apps"
+              }
+            },
+            "Property": "Application"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "e9121790786ab2024c0a",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Calendar"
+              }
+            },
+            "Property": "Month"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "c31a4eaf33387580e27b",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Tag"
+              }
+            },
+            "Property": "Tag Name"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "t",
+              "Entity": "Tag",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "t"
+                          }
+                        },
+                        "Property": "Tag Name"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'Appid'"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      },
+      {
+        "name": "8c55b831a0dd8028a56a",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "KPIs"
+              }
+            },
+            "Property": "Total Cost (USD)"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "39cca526139320b95bc0",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "ResourceTag"
+              }
+            },
+            "Property": "Tag Value"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "r",
+              "Entity": "ResourceTag",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Contains": {
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "r"
+                            }
+                          },
+                          "Property": "Tag Value"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "'Untagged'"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ]
+  }
+}

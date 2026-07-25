@@ -1,0 +1,111 @@
+/// Time Calculation Group for previous
+/// period
+table TimeCalculationPriorPeriod
+	lineageTag: a9c5cbd8-de45-4034-970b-ed73769d1f6e
+
+	calculationGroup
+		precedence: 1
+
+		calculationItem Current = CALCULATE ( SELECTEDMEASURE (), SAMEPERIODLASTYEAR ( 'Gregorian' ) )
+
+		calculationItem L3M =
+				VAR Mth = 3
+				VAR MaxDate =
+				    MAX ( Calendar[Date] )
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        PARALLELPERIOD (
+				            DATESINPERIOD ( 'Calendar'[Date], EOMONTH ( MaxDate, 0 ), - Mth, MONTH ),
+				            - Mth,
+				            MONTH
+				        )
+				    )
+
+		calculationItem L6M =
+				VAR Mth = 6
+				VAR MaxDate =
+				    MAX ( Calendar[Date] )
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        PARALLELPERIOD (
+				            DATESINPERIOD ( 'Calendar'[Date], EOMONTH ( MaxDate, 0 ), - Mth, MONTH ),
+				            - Mth,
+				            MONTH
+				        )
+				    )
+
+		calculationItem L9M =
+				VAR Mth = 9
+				VAR MaxDate =
+				    MAX ( Calendar[Date] )
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        PARALLELPERIOD (
+				            DATESINPERIOD ( 'Calendar'[Date], EOMONTH ( MaxDate, 0 ), - Mth, MONTH ),
+				            - Mth,
+				            MONTH
+				        )
+				    )
+
+		calculationItem MAT =
+				VAR Mth = 12
+				VAR MaxDate =
+				    MAX ( Calendar[Date] )
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        PARALLELPERIOD (
+				            DATESINPERIOD ( 'Calendar'[Date], EOMONTH ( MaxDate, 0 ), - Mth, MONTH ),
+				            - Mth,
+				            MONTH
+				        )
+				    )
+
+		calculationItem MTD =
+				CALCULATE (
+				    TOTALMTD ( SELECTEDMEASURE (), 'Gregorian' ),
+				    SAMEPERIODLASTYEAR ( 'Gregorian' )
+				)
+
+		calculationItem WTD =
+				CALCULATE (
+				    TOTALWTD ( SELECTEDMEASURE (), 'Gregorian' ),
+				    SAMEPERIODLASTYEAR ( 'Gregorian' )
+				)
+
+		calculationItem YTD =
+				CALCULATE (
+				    TOTALYTD ( SELECTEDMEASURE (), 'Gregorian' ),
+				    SAMEPERIODLASTYEAR ( 'Gregorian' )
+				)
+
+		calculationItem QTD =
+				CALCULATE (
+				    TOTALQTD ( SELECTEDMEASURE (), 'Gregorian' ),
+				    SAMEPERIODLASTYEAR ( 'Gregorian' )
+				)
+
+	/// Label identifying the time aggregation option
+	column 'Time Aggregation'
+		dataType: string
+		lineageTag: 2a8c1dc7-ece8-46b4-9187-a867de9e0add
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sort order of the prior-period calculation items. Hidden; sorts the Time Aggregation column.
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 57e261f1-c7a7-4680-bc46-e974a3674d4a
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

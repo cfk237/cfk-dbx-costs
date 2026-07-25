@@ -1,0 +1,175 @@
+expression p_AwsUrl = "dbc-9af60f93-74a5.cloud.databricks.com" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: acd62d0f-c402-42a9-aae6-acb29bf84e25
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression p_AwsWarehouse = "/sql/1.0/warehouses/40114aeb5c21ca41" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 3da3373c-d7ae-404f-a970-753588df8248
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression p_CatalogName = "it_security_dev" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 265e9cf5-dc06-47b4-a4fb-7b9f6091d04e
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression p_Schema = "dataplatform_usage" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 5a0fd83c-19e8-463a-9f54-58a0ada72074
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression fn_Calendar =
+		let CreateDateTable = (P_StartDate as date,P_EndDate as date) as table =>
+		    let
+		        NumberOfDays = Duration.Days(Duration.From(P_EndDate-P_StartDate)) + 1,
+		        Source = List.Dates(P_StartDate,NumberOfDays,#duration(1,0,0,0)),
+		        TableFromList = Table.FromList(Source,Splitter.SplitByNothing(),{"Date"}),
+		        ChangeType = Table.TransformColumnTypes(TableFromList,{{"Date", type date}}),
+		        // Year
+		        AddYear = Table.AddColumn(ChangeType,"Year",each Date.Year([Date]),Int64.Type),
+		        // Quarter
+		        AddQuarterNum = Table.AddColumn(AddYear,"Quarter Number",each Date.QuarterOfYear([Date]),Int64.Type),
+		        AddQuarterSortKey = Table.AddColumn(AddQuarterNum,"Quarter Sort Key",each Date.Year([Date]) * 10 + Date.QuarterOfYear([Date]),Int64.Type),
+		        AddQuarterOfYear = Table.AddColumn(AddQuarterSortKey,"Quarter of Year",each "Q" & Text.From(Date.QuarterOfYear([Date])),type text),
+		        AddQuarter = Table.AddColumn(AddQuarterOfYear,"Quarter",each "Q" & Text.From(Date.QuarterOfYear([Date])) & "." & Text.From(Date.Year([Date])),type text),
+		        // Month
+		        AddMonthOfYearNum = Table.AddColumn(AddQuarter,"Month of Year Number",each Date.Month([Date]),Int64.Type),
+		        AddMonthSortKey = Table.AddColumn(AddMonthOfYearNum,"Month Sort Key",each Date.Year([Date]) * 100 + Date.Month([Date]),Int64.Type),
+		        AddMonthOfYear = Table.AddColumn(AddMonthSortKey,"Month of Year",each Date.MonthName([Date],"en-US"),type text),
+		        AddMonth = Table.AddColumn(AddMonthOfYear,"Month",each Date.ToText([Date],"MMMM yyyy","en-US"),type text),
+		        AddMonthOfQuarterNum = Table.AddColumn(AddMonth,"Month of Quarter Number",each Date.Month([Date]) - (Date.QuarterOfYear([Date]) - 1) * 3,Int64.Type),
+		        AddMonthOfQuarter = Table.AddColumn(AddMonthOfQuarterNum,"Month of Quarter",each "QM" & Text.From(Date.Month([Date]) - (Date.QuarterOfYear([Date]) - 1) * 3),type text),
+		        // Week
+		        AddWeekOfYearNum = Table.AddColumn(AddMonthOfQuarter,"Week of Year Number",each Date.WeekOfYear([Date],Day.Monday),Int64.Type),
+		        AddWeekSortKey = Table.AddColumn(AddWeekOfYearNum,"Week Sort Key",each Date.Year([Date]) * 100 + Date.WeekOfYear([Date],Day.Monday),Int64.Type),
+		        AddWeekOfYear = Table.AddColumn(AddWeekSortKey,"Week of Year",each "W" & Text.PadStart(Text.From(Date.WeekOfYear([Date],Day.Monday)),2,"0"),type text),
+		        AddWeek = Table.AddColumn(AddWeekOfYear,"Week",each Text.From(Date.Year([Date])) & "-W" & Text.PadStart(Text.From(Date.WeekOfYear([Date],Day.Monday)),2,"0"),type text),
+		        AddWeekOfQuarterNum = Table.AddColumn(AddWeek,"Week of Quarter Number",each Date.WeekOfYear([Date],Day.Monday) - Date.WeekOfYear(Date.StartOfQuarter([Date]),Day.Monday) + 1,Int64.Type),
+		        AddWeekOfQuarter = Table.AddColumn(AddWeekOfQuarterNum,"Week of Quarter",each "QW" & Text.From(Date.WeekOfYear([Date],Day.Monday) - Date.WeekOfYear(Date.StartOfQuarter([Date]),Day.Monday) + 1),type text),
+		        AddWeekOfMonthNum = Table.AddColumn(AddWeekOfQuarter,"Week of Month Number",each Date.WeekOfMonth([Date],Day.Monday),Int64.Type),
+		        AddWeekOfMonth = Table.AddColumn(AddWeekOfMonthNum,"Week of Month",each "MW" & Text.From(Date.WeekOfMonth([Date],Day.Monday)),type text),
+		        // Day
+		        AddDayOfYear = Table.AddColumn(AddWeekOfMonth,"Day of Year",each Date.DayOfYear([Date]),Int64.Type),
+		        AddDayOfQuarter = Table.AddColumn(AddDayOfYear,"Day of Quarter",each Duration.Days([Date] - Date.StartOfQuarter([Date])) + 1,Int64.Type),
+		        AddDayOfMonth = Table.AddColumn(AddDayOfQuarter,"Day of Month",each Date.Day([Date]),Int64.Type),
+		        AddDayOfWeek = Table.AddColumn(AddDayOfMonth,"Day of Week",each Date.DayOfWeek([Date],Day.Monday) + 1,Int64.Type),
+		        AddDayOfWeekName = Table.AddColumn(AddDayOfWeek,"Day of Week Name",each Date.ToText([Date],"dddd","en-US"),type text)
+		    in
+		        AddDayOfWeekName
+		in
+		    CreateDateTable
+	lineageTag: dc915ec4-345c-4e27-8e12-b2f5f2632ca3
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Function
+
+expression _Catalog =
+		let
+		    Source = DatabricksMultiCloud.Catalogs(p_AwsUrl, p_AwsWarehouse, [Catalog="default", Database=null, QueryTags=null, EnableAutomaticProxyDiscovery=null, Implementation=null]),
+		    #"Catalog_Database" = Source{[Name=p_CatalogName,Kind="Database"]}[Data],
+		    data_product_Schema = #"Catalog_Database"{[Name=p_Schema,Kind="Schema"]}[Data]
+		in
+		    data_product_Schema
+	lineageTag: a18e2d6a-075b-4d07-881c-5af4b51453b7
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Derives the start and end dates from the Costs usage_dt column to drive the Calendar table range.
+expression _DatesPoints =
+		let
+		    Source = _Catalog,
+		    vf_pbi_billing_cost_View = Source{[Name="vf_pbi_billing_cost",Kind="View"]}[Data],
+		    #"Removed Other Columns" = Table.SelectColumns(vf_pbi_billing_cost_View,{"usage_dt"}),
+		    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Removed Duplicates",{{"usage_dt", type date}}),
+		    #"Grouped Rows" = Table.Group(#"Changed Type", {}, {{"StartDate", each List.Min([usage_dt]), type nullable date}, {"EndDate", each List.Max([usage_dt]), type nullable date}}),
+		    #"Calculated Start of Month" = Table.TransformColumns(#"Grouped Rows",{{"StartDate", Date.StartOfMonth, type date}}),
+		    #"Calculated End of Month" = Table.TransformColumns(#"Calculated Start of Month",{{"EndDate", Date.EndOfMonth, type date}})
+		in
+		    #"Calculated End of Month"
+	lineageTag: 97319d66-b0af-4d11-9975-d0dd128e0e03
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression p_SchemaOneid = "oneid" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 5e16a34c-9fd6-42be-8988-1fe6f84c4c49
+	queryGroup: Parameters
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Text
+
+expression _CatalogOneid =
+		let
+		    Source = DatabricksMultiCloud.Catalogs(p_AwsUrl, p_AwsWarehouse, [Catalog="default", Database=null, QueryTags=null, EnableAutomaticProxyDiscovery=null, Implementation=null]),
+		    #"Catalog_Database" = Source{[Name=p_CatalogName,Kind="Database"]}[Data],
+		    data_product_Schema = #"Catalog_Database"{[Name=p_SchemaOneid,Kind="Schema"]}[Data]
+		in
+		    data_product_Schema
+	lineageTag: 6e390605-8045-4ca3-87d4-4caf243452b5
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Dimension table containing Databricks identities (users and service principals) used to attribute usage cost to who ran the workload.
+expression _RawIdentity =
+		let
+		    Source = _Catalog,
+		    vd_pbi_identity_View = Source{[Name="vd_pbi_identity",Kind="View"]}[Data],
+		    #"Removed Other Columns" = Table.SelectColumns(vd_pbi_identity_View,{"identity_id", "account_cd", "identity_type_lb", "source_cd", "display_name_lb", "identity_cd", "first_name_lb", "last_name_lb", "is_active_fl"})
+		in
+		    #"Removed Other Columns"
+	lineageTag: 917b279d-4a9f-4bba-ace8-3fc799678a72
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression Domains =
+		let
+		  Source = Excel.Workbook(Web.Contents("https://ipsengroup.sharepoint.com/sites/DevsPowerBI/Documents%20partages/Databricks%20Cost/APP_ID.xlsx"), null, true),
+		  #"Navigation 1" = Source{[Item = "TD_IOS_INF_DOMAINS", Kind = "Sheet"]}[Data],
+		  #"Promoted headers" = Table.PromoteHeaders(#"Navigation 1", [PromoteAllScalars = true]),
+		  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers", {{"DOMAIN_ID", Int64.Type}, {"DOMAIN_LB", type text}, {"SYS_ACTIVE_FL", Int64.Type}, {"SYS_SOURCE_CD", type text}, {"SYS_ORIGIN_CD", type text}, {"SYS_UPDATE_DT", type datetime}}, "en-US"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Changed column type",{"SYS_SOURCE_CD", "SYS_ORIGIN_CD", "SYS_UPDATE_DT", "SYS_ACTIVE_FL"})
+		in
+		  #"Removed Columns"
+	lineageTag: 12c3301f-7d0f-4fdf-a79f-1cd1132876de
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression 'Sub Domains' =
+		let
+		  Source = Excel.Workbook(Web.Contents("https://ipsengroup.sharepoint.com/sites/DevsPowerBI/Documents%20partages/Databricks%20Cost/APP_ID.xlsx"), null, true),
+		  #"Navigation 1" = Source{[Item = "TD_IOS_INF_SUB_DOMAINS", Kind = "Sheet"]}[Data],
+		  #"Promoted headers" = Table.PromoteHeaders(#"Navigation 1", [PromoteAllScalars = true]),
+		  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers", {{"SUB_DOMAIN_ID", Int64.Type}, {"SUB_DOMAIN_LB", type text}, {"SYS_ACTIVE_FL", Int64.Type}, {"SYS_SOURCE_CD", type text}, {"SYS_ORIGIN_CD", type text}, {"SYS_UPDATE_DT", type datetime}}, "en-US"),
+		    #"Removed Columns" = Table.RemoveColumns(#"Changed column type",{"SYS_SOURCE_CD", "SYS_ORIGIN_CD", "SYS_UPDATE_DT", "SYS_ACTIVE_FL"})
+		in
+		  #"Removed Columns"
+	lineageTag: 63e10e26-ec0b-4726-8183-3349f331bd6e
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,103 @@
+/// Role-playing dimension table representing the Databricks identity who owns a resource (job, cluster, warehouse, etc.). Built from the same source as the Identity table but filtered to resource ownership context. Joined to the Resource table on Owned By.
+table IdentityOwner
+	lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567890
+
+	/// Databricks account identifier the identity belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567891
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Type of identity, e.g. user or service principal.
+	column 'Identity Type'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567892
+		summarizeBy: none
+		sourceColumn: identity_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity identifier from the Databricks source system. Join key to Resource[Owned By]. Hidden; used only for model relationships.
+	column 'Identity ID'
+		dataType: string
+		isHidden
+		isKey
+		isAvailableInMdx: false
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567893
+		summarizeBy: none
+		sourceColumn: identity_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity source identifier from the Databricks source system (user ID or service principal ID).
+	column 'Source ID'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567894
+		summarizeBy: none
+		sourceColumn: source_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Display name of the identity who owns the resource.
+	column 'Owner Name'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567895
+		summarizeBy: none
+		sourceColumn: display_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// First name of the owner, when applicable to user identities.
+	column 'First Name'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567896
+		summarizeBy: none
+		sourceColumn: first_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Last name of the owner, when applicable to user identities.
+	column 'Last Name'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567897
+		summarizeBy: none
+		sourceColumn: last_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether the owner identity is currently active (Yes) or inactive (No).
+	column 'Is Active'
+		dataType: string
+		lineageTag: b3f1a2c4-d5e6-7890-bcde-f01234567898
+		summarizeBy: none
+		sourceColumn: is_active_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Surrogate key uniquely identifying each identity row. Hidden; used only for model relationships.
+	column 'Identity Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 108415b4-5a78-470e-b810-94f0839f4d33
+		summarizeBy: none
+		sourceColumn: identity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition IdentityOwner = m
+		mode: import
+		source =
+				let
+				    Source = _RawIdentity
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

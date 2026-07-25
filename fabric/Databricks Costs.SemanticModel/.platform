@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Databricks Costs"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4498a9d4-8813-4b35-9974-a7151b0c096a"
+  }
+}

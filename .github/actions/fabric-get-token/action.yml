@@ -1,0 +1,79 @@
+# Composite action: get-token
+#
+# Purpose:
+#   Logs in to Azure via OIDC and acquires a bearer token for either the
+#   Fabric API or the Power BI SQL-endpoint resource URL.
+#
+# Design:
+#   Uses azure/login@v3 (OIDC) for authentication, then az account get-access-token
+#   to fetch the token. The token is masked with ::add-mask:: before being
+#   written to outputs so it never appears in plain text in workflow logs.
+#
+#   The calling job must declare:
+#     permissions:
+#       id-token: write
+#       contents: read
+#
+# Inputs:
+#   client-id        : Azure service principal (app) client ID.
+#   tenant-id        : Azure tenant ID.
+#   subscription-id  : Azure subscription ID (optional).
+#   use-fabric-api   : true  → https://api.fabric.microsoft.com (default)
+#                      false → https://analysis.windows.net/powerbi/api
+#
+# Outputs:
+#   token  : Bearer token for the requested resource (masked in logs).
+
+name: Get Fabric / Power BI token
+description: >
+  Logs in to Azure via OIDC and acquires a bearer token for the Fabric API
+  or the Power BI SQL-endpoint resource.
+
+inputs:
+  client-id:
+    description: Azure user managed identity (app) client ID
+    required: true
+  tenant-id:
+    description: Azure tenant ID
+    required: true
+  subscription-id:
+    description: Azure subscription ID (optional — not required for token acquisition)
+    required: false
+    default: ""
+  use-fabric-api:
+    description: >
+      true  → target https://api.fabric.microsoft.com (default)
+      false → target https://analysis.windows.net/powerbi/api
+    required: false
+    default: "true"
+
+outputs:
+  token:
+    description: Bearer token for the requested resource (masked in logs)
+    value: ${{ steps.get-token.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Azure login
+      uses: azure/login@v3
+      with:
+        client-id: ${{ inputs.client-id }}
+        tenant-id: ${{ inputs.tenant-id }}
+        subscription-id: ${{ inputs.subscription-id }}
+
+    - name: Acquire bearer token
+      id: get-token
+      shell: bash
+      env:
+        USE_FABRIC_API: ${{ inputs.use-fabric-api }}
+      run: |
+        if [ "$USE_FABRIC_API" = "true" ]; then
+          RESOURCE_URL="https://api.fabric.microsoft.com"
+        else
+          RESOURCE_URL="https://analysis.windows.net/powerbi/api"
+        fi
+        echo "Acquiring token for resource: $RESOURCE_URL"
+        token=$(az account get-access-token --resource "$RESOURCE_URL" --query accessToken -o tsv)
+        echo "::add-mask::$token"
+        echo "token=$token" >> "$GITHUB_OUTPUT"

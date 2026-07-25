@@ -1,0 +1,160 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "3300000000000000cc04",
+  "position": {
+    "x": 0,
+    "y": 460,
+    "z": 4000,
+    "height": 540,
+    "width": 1520,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Resource Name"
+                }
+              },
+              "queryRef": "Resource.Resource Name",
+              "nativeQueryRef": "Resource Name",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Resource Type"
+                }
+              },
+              "queryRef": "Resource.Resource Type",
+              "nativeQueryRef": "Resource Type",
+              "active": true
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Total Cost (USD)"
+                }
+              },
+              "queryRef": "KPIs.Total Cost (USD)",
+              "nativeQueryRef": "Total Cost (USD)",
+              "active": true
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Cost % of Total (Resource)"
+                }
+              },
+              "queryRef": "KPIs.Cost % of Total (Resource)",
+              "nativeQueryRef": "Cost % of Total (Resource)",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Owned By"
+                }
+              },
+              "queryRef": "Resource.Owned By",
+              "nativeQueryRef": "Owned By",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Is Active"
+                }
+              },
+              "queryRef": "Resource.Is Active",
+              "nativeQueryRef": "Is Active",
+              "active": true
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "KPIs"
+                  }
+                },
+                "Property": "Total Cost (USD)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "general": [
+        {
+          "properties": {}
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Resource Detail'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

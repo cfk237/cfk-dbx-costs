@@ -1,0 +1,71 @@
+table CostOrUsage
+	lineageTag: 196ee348-7a6c-48cd-976e-677b16bda089
+
+	column CostOrUsage
+		lineageTag: 531c25f0-25cc-498e-843e-1d712e53ff0f
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'CostOrUsage Order'
+
+		relatedColumnDetails
+			groupByColumn: 'CostOrUsage Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CostOrUsage Fields'
+		isHidden
+		lineageTag: 7d6f7f21-49ec-4a2c-8761-32373a2f4015
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'CostOrUsage Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'CostOrUsage Order'
+		isHidden
+		formatString: 0
+		lineageTag: 610985ed-b918-4c15-bb80-89a685f60b41
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Title
+		lineageTag: 62814846-f569-43b4-aaf8-a8f966d2938e
+		summarizeBy: none
+		sourceColumn: [Value4]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Short Name'
+		lineageTag: e3f66884-1570-4eba-81e9-ebc890d574b7
+		summarizeBy: none
+		sourceColumn: [Value5]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Visual
+		lineageTag: 72a7cfb8-5f4e-4672-8b37-a6aef364aa5c
+		summarizeBy: none
+		sourceColumn: [Value6]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition CostOrUsage = calculated
+		mode: import
+		source =
+				{
+				    ( "Total Cost (USD)", NAMEOF ( 'KPIs'[Total Cost (USD)] ), 0, "Total Cost (USD)", "Cost","all" ),
+				    ( "Total Usage (DBUs)", NAMEOF ( 'KPIs'[Total Usage (DBUs)] ), 1, "Total Usage (DBUs)", "Usage","all" ),
+				    ( "Total Cost (USD)", NAMEOF ( 'KPIs'[Total Cost (USD) Formatted] ), 2, "Total Cost (USD)", "Cost","treemap" ),
+				    ( "Total Usage (DBUs)", NAMEOF ( 'KPIs'[Total Usage (DBUs) Formatted] ), 3, "Total Usage (DBUs)", "Usage","treemap" )
+				}
+
+	annotation PBI_Id = b03713b86f83474aa0153f4f9b2fda05
+

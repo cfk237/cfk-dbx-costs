@@ -1,0 +1,15 @@
+targets:
+  # The 'dev' target, for development purposes. This target is the default.
+  prod:
+    presets:
+      tags:
+        AppId: "${var.app_id}"
+        dataproduct: "${var.data_product}"
+        domain: "${var.domain}"
+
+    mode: production
+
+    variables:
+      catalog_env: prod
+      job_schedule_status: "UNPAUSED"
+    

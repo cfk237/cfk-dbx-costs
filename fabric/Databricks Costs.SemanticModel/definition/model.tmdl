@@ -1,0 +1,45 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: fr-FR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup Parameters
+
+	annotation PBI_QueryGroupOrder = 0
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["p_AwsUrl","p_AwsWarehouse","p_CatalogName","p_Schema","p_SchemaOneid","fn_Calendar","KPIs","_Catalog","_CatalogOneid","_RawIdentity","Identity","Resource","Workspace","Tag","ResourceTag","Costs","Calendar","_DatesPoints","OneidUser","IdentityOwner","RefreshDate","QueryCosts","Apps","Domains","Sub Domains"]
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling","CalcGroup","TMDLView_Desktop","DaxQueryView_Desktop"]
+
+annotation __TEdtr = 1
+
+annotation BestPracticeAnalyzer_IgnoreRules = {"RuleIDs":["RELATIONSHIP_COLUMNS_SHOULD_BE_OF_INTEGER_DATA_TYPE"]}
+
+ref table KPIs
+ref table Identity
+ref table Resource
+ref table Workspace
+ref table Tag
+ref table ResourceTag
+ref table Costs
+ref table Calendar
+ref table TimeCalculation
+ref table TimeCalculationPriorPeriod
+ref table OneidUser
+ref table IdentityOwner
+ref table RefreshDate
+ref table Filters
+ref table QueryCosts
+ref table CostOrUsage
+ref table Period
+ref table Parameter
+ref table Apps
+
+ref cultureInfo en-US
+

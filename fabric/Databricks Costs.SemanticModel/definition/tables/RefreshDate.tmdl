@@ -1,0 +1,30 @@
+/// Single-row table storing the last data refresh timestamp. Used to display data freshness on report pages.
+table RefreshDate
+	lineageTag: a2581551-3e39-425e-a47b-69ad6273d065
+
+	/// UTC timestamp of the last semantic model refresh, evaluated at refresh time. Feeds the "Last refreshed" header card.
+	column 'Last refreshed'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 464cfa85-3409-4013-b5e9-fc1c59e61060
+		summarizeBy: none
+		sourceColumn: Last refreshed
+
+		annotation SummarizationSetBy = Automatic
+
+	partition RefreshDate = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        {"Last refreshed"},
+				        {{ DateTime.From(DateTimeZone.UtcNow()) }}
+				    ),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Last refreshed", type datetime}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

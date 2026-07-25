@@ -1,0 +1,64 @@
+table Parameter
+	lineageTag: 7e9c120a-0d96-45e8-a213-18011facf875
+
+	column Parameter
+		lineageTag: 0053cdbd-01d0-44ed-bae9-5315bce9cef4
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Parameter Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Parameter Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Fields'
+		isHidden
+		lineageTag: 952c7268-382d-4f9d-b66e-90662e912b8a
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Parameter Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Parameter Order'
+		isHidden
+		formatString: 0
+		lineageTag: ef515b01-b287-40dc-8aa7-3741b293a6d1
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value4
+		lineageTag: b7435fcf-4451-4e53-9b1e-49f007feef75
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value4]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value5
+		lineageTag: e3cfda64-9f53-4eb2-af5b-22dee722ab6b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value5]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Parameter = calculated
+		mode: import
+		source =
+				{
+				    ("Total Cost (USD)", NAMEOF('KPIs'[Total Cost (USD) Formatted]), 0, "Total Cost (USD)","treemap"),
+				    ("Total Cost (DBUs)", NAMEOF('KPIs'[Total Usage Quantity]), 1, "Total Usage (DBUs)","treemap")
+				}
+
+	annotation PBI_Id = dca224999c95444ea895b12a15dfe1a3
+

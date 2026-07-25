@@ -1,0 +1,1923 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/bookmark/2.1.0/schema.json",
+  "displayName": "Product Usage by Workspace Detail",
+  "name": "ac5570f77a87720880b1",
+  "options": {
+    "applyOnlyToTargetVisuals": true,
+    "targetVisualNames": [
+      "32d918b630148ea85dd4",
+      "57e2029265abb42309c0",
+      "24013ac68996b9b3303a"
+    ],
+    "suppressData": true
+  },
+  "explorationState": {
+    "version": "1.40",
+    "activeSection": "6f2beae4400147e00a2d",
+    "sections": {
+      "6f2beae4400147e00a2d": {
+        "visualContainers": {
+          "02bef981b322246a00a6": {
+            "singleVisual": {
+              "visualType": "shape",
+              "objects": {}
+            }
+          },
+          "06a9e1fd4ed519352403": {
+            "filters": {
+              "byName": {
+                "4025f16b00a839ce7205": {
+                  "name": "4025f16b00a839ce7205",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "5a509842062811771c98",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Is Serverless"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {
+                "merge": {
+                  "data": [
+                    {
+                      "properties": {
+                        "mode": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "'Basic'"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Is Serverless"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Is Serverless"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "0a8bc80eb9931680ee54": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "48054dcb1b4086b7007c",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "ResourceTag"
+                        }
+                      },
+                      "Property": "Tag Value"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "cf1464a4bbdd0d1a06de",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "clusteredColumnChart",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Category": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "ResourceTag"
+                        }
+                      },
+                      "Property": "Tag Value"
+                    }
+                  }
+                ]
+              },
+              "projections": {
+                "Category": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "ResourceTag"
+                        }
+                      },
+                      "Property": "Tag Value"
+                    }
+                  }
+                ],
+                "Y": [
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                ]
+              },
+              "parameters": {
+                "Y": [
+                  {
+                    "expr": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Cost / Usage"
+                          }
+                        },
+                        "Property": "Cost / Usage"
+                      }
+                    },
+                    "index": 0,
+                    "length": 1
+                  }
+                ]
+              }
+            }
+          },
+          "15bb4fbb441dbc2d6e8a": {
+            "singleVisual": {
+              "visualType": "image",
+              "objects": {}
+            }
+          },
+          "1c1267f5022e101a2963": {
+            "singleVisual": {
+              "visualType": "bookmarkNavigator",
+              "objects": {}
+            }
+          },
+          "24013ac68996b9b3303a": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "d5cdba80ee0d5a48d193",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Name"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "0e02a459eb608e4b24c0",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "14caaf8a381085c9a2a0",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "d3a6842a90a7d85538d4",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "9d0c4e99c3d05a5a06bb",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "12ad6b53638eec6403cc",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "tableEx",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Name"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                ]
+              },
+              "projections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Name"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total (Identity)"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                ]
+              },
+              "parameters": {
+                "Values": [
+                  {
+                    "expr": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Cost / Usage"
+                          }
+                        },
+                        "Property": "Cost / Usage"
+                      }
+                    },
+                    "index": 2,
+                    "length": 1,
+                    "sortDirection": 2
+                  }
+                ]
+              },
+              "display": {
+                "mode": "hidden"
+              }
+            }
+          },
+          "32d918b630148ea85dd4": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "e6dbea04801db37a0b38",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Name"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "7f5fe76a03277980ca27",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "64ae225079b339e2781b",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total (Resource)"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "6354d34ec9c7ce6792e9",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "236d2db9826ece2c403b",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "2bf3c5ff22ab900069de",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "tableEx",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Name"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total (Resource)"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                ]
+              },
+              "projections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Name"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "% of Total (Resource)"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Owned By"
+                    }
+                  },
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                ]
+              },
+              "parameters": {
+                "Values": [
+                  {
+                    "expr": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Cost / Usage"
+                          }
+                        },
+                        "Property": "Cost / Usage"
+                      }
+                    },
+                    "index": 2,
+                    "length": 1,
+                    "sortDirection": 2
+                  }
+                ]
+              },
+              "display": {
+                "mode": "hidden"
+              }
+            }
+          },
+          "66625cafce79b191867d": {
+            "filters": {
+              "byName": {
+                "4025f16b00a839ce7205": {
+                  "name": "4025f16b00a839ce7205",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "a45f39ddd21620a37d76",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "25a6d386377001a28e3a",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Resource.Resource Type"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Resource"
+                              }
+                            },
+                            "Property": "Resource Type"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Resource.Resource Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "66cfe50b19988a5e1777": {
+            "singleVisual": {
+              "visualType": "shape",
+              "objects": {}
+            }
+          },
+          "796ced208219dd090227": {
+            "filters": {
+              "byName": {
+                "ef07a77b681194188487": {
+                  "name": "ef07a77b681194188487",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "df95350e210c6015317d",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "88a91a0266dc791e3b60",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Identity.Identity Type"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Identity"
+                              }
+                            },
+                            "Property": "Identity Type"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Identity.Identity Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "b92d9fc056d36d1b0024": {
+            "filters": {
+              "byName": {
+                "bdd58d1ae0062495f607": {
+                  "name": "bdd58d1ae0062495f607",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "1ed18df44b0669a57c0a",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Environment"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "239a03a0305b0e6634b2",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Workspace Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Environment"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Workspace.Environment"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Workspace"
+                              }
+                            },
+                            "Property": "Environment"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Workspace.Workspace Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "ce430f944275069a0e02": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "0cd52249a0c698800671",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Last Refreshed"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "cardVisual",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Last Refreshed"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "d056a2510d7c391d98b9": {
+            "filters": {
+              "byName": {
+                "d1593a5af6750b4c4e98": {
+                  "name": "d1593a5af6750b4c4e98",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "9d663b1448086764b182",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {
+                "merge": {
+                  "general": [
+                    {
+                      "properties": {
+                        "filter": {
+                          "filter": {
+                            "Version": 2,
+                            "From": [
+                              {
+                                "Name": "c",
+                                "Entity": "Calendar",
+                                "Type": 0
+                              }
+                            ],
+                            "Where": [
+                              {
+                                "Condition": {
+                                  "And": {
+                                    "Left": {
+                                      "Comparison": {
+                                        "ComparisonKind": 2,
+                                        "Left": {
+                                          "Column": {
+                                            "Expression": {
+                                              "SourceRef": {
+                                                "Source": "c"
+                                              }
+                                            },
+                                            "Property": "Date"
+                                          }
+                                        },
+                                        "Right": {
+                                          "Literal": {
+                                            "Value": "datetime'2026-01-01T00:00:00'"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Right": {
+                                      "Comparison": {
+                                        "ComparisonKind": 3,
+                                        "Left": {
+                                          "Column": {
+                                            "Expression": {
+                                              "SourceRef": {
+                                                "Source": "c"
+                                              }
+                                            },
+                                            "Property": "Date"
+                                          }
+                                        },
+                                        "Right": {
+                                          "Literal": {
+                                            "Value": "datetime'2026-07-01T00:00:00'"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "data": [
+                    {
+                      "properties": {
+                        "mode": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "'RelativeDatePicker'"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "selection": [
+                    {
+                      "properties": {
+                        "strictSingleSelect": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "false"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "d8b7c2ac370500a5cab2": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "d1d4c46198a0bd2ce054",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Latest Data Date"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "cardVisual",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Latest Data Date"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "e9c2f76340bad37601bb": {
+            "filters": {
+              "byName": {
+                "4025f16b00a839ce7205": {
+                  "name": "4025f16b00a839ce7205",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "4cb607257bba716976e7",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Is Active"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "ef924a466032589056e6": {
+            "singleVisual": {
+              "visualType": "textbox",
+              "objects": {}
+            }
+          },
+          "f3480f102b866b0a7a47": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "673b0c8401d8c60e1084",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "CostOrUsage"
+                        }
+                      },
+                      "Property": "CostOrUsage"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "advancedSlicerVisual",
+              "objects": {
+                "merge": {
+                  "general": [
+                    {
+                      "properties": {
+                        "filter": {
+                          "filter": {
+                            "Version": 2,
+                            "From": [
+                              {
+                                "Name": "c",
+                                "Entity": "CostOrUsage",
+                                "Type": 0
+                              }
+                            ],
+                            "Where": [
+                              {
+                                "Condition": {
+                                  "In": {
+                                    "Expressions": [
+                                      {
+                                        "Column": {
+                                          "Expression": {
+                                            "SourceRef": {
+                                              "Source": "c"
+                                            }
+                                          },
+                                          "Property": "CostOrUsage Fields"
+                                        }
+                                      }
+                                    ],
+                                    "Values": [
+                                      [
+                                        {
+                                          "Literal": {
+                                            "Value": "'''KPIs''[Total Cost (USD)]'"
+                                          }
+                                        }
+                                      ]
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "selection": [
+                    {
+                      "properties": {
+                        "strictSingleSelect": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "true"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "cachedFilterDisplayItems": [
+                {
+                  "id": {
+                    "scopeId": {
+                      "Comparison": {
+                        "ComparisonKind": 0,
+                        "Left": {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Cost / Usage"
+                              }
+                            },
+                            "Property": "Cost / Usage Fields"
+                          }
+                        },
+                        "Right": {
+                          "Literal": {
+                            "Value": "'''KPIs''[Total Cost (USD)]'"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "displayName": "Total Cost (USD)"
+                }
+              ]
+            }
+          },
+          "fab7e5196301269aa525": {
+            "singleVisual": {
+              "visualType": "shape",
+              "objects": {}
+            }
+          },
+          "57e2029265abb42309c0": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "bbba713b3457c949c2a9",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Usage Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "c1e84672763cd00a5d07",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Workspace Name"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "7f8583e66095c50b7cb0",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "pivotTable",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 2,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Rows": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Usage Type"
+                    }
+                  }
+                ],
+                "Columns": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Workspace Name"
+                    }
+                  }
+                ]
+              },
+              "projections": {
+                "Values": [
+                  {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Total Cost (USD)"
+                    }
+                  }
+                ],
+                "Rows": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Costs"
+                        }
+                      },
+                      "Property": "Usage Type"
+                    }
+                  }
+                ],
+                "Columns": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Workspace Name"
+                    }
+                  }
+                ]
+              },
+              "parameters": {
+                "Values": [
+                  {
+                    "expr": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Cost / Usage"
+                          }
+                        },
+                        "Property": "Cost / Usage"
+                      }
+                    },
+                    "index": 0,
+                    "length": 1,
+                    "sortDirection": 2
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "objects": {
+      "merge": {
+        "outspacePane": [
+          {
+            "properties": {
+              "expanded": {
+                "expr": {
+                  "Literal": {
+                    "Value": "false"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

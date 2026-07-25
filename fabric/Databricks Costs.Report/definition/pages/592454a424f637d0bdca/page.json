@@ -1,0 +1,128 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "592454a424f637d0bdca",
+  "displayName": "Overview",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920,
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "ef70881c65bae0d8970d",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "CostOrUsage"
+              }
+            },
+            "Property": "Visual"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "CostOrUsage",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "c"
+                          }
+                        },
+                        "Property": "Visual"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'treemap'"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "isHiddenInViewMode": true,
+        "isLockedInViewMode": true
+      }
+    ]
+  },
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "14D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "displayArea": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Middle'"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "a26250fa018d700db8c7",
+      "target": "3262ebaf2b9916edfe59",
+      "type": "NoFilter"
+    },
+    {
+      "source": "a26250fa018d700db8c7",
+      "target": "3482cd171f4a12155367",
+      "type": "NoFilter"
+    },
+    {
+      "source": "a26250fa018d700db8c7",
+      "target": "97de44a895b935e44381",
+      "type": "NoFilter"
+    },
+    {
+      "source": "3262ebaf2b9916edfe59",
+      "target": "a26250fa018d700db8c7",
+      "type": "NoFilter"
+    },
+    {
+      "source": "3482cd171f4a12155367",
+      "target": "a26250fa018d700db8c7",
+      "type": "NoFilter"
+    },
+    {
+      "source": "97de44a895b935e44381",
+      "target": "a26250fa018d700db8c7",
+      "type": "NoFilter"
+    }
+  ]
+}

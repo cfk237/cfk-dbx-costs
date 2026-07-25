@@ -1,0 +1,87 @@
+bundle:
+  name: dataplatform_usage
+  # git:
+  #   origin_url: https://github.com/ipsen-digital/dp-finance-tne-monitoring.git
+  #   branch: main
+
+include:
+  - conf/*.yml
+  - resources/*.yml
+
+sync:
+  paths:
+    - src
+
+variables:
+  domain:
+    description: "Domain that owns this data scope"
+    default: "it_security"
+
+  data_product_bronze:
+    description: "Name of the data product"
+    default: "databricks"
+
+  data_product_silver:
+    description: "Name of the data product"
+    default: "global_it_hub"
+
+  data_product:
+    description: "Name of the data product"
+    default: "dataplatform_usage"
+
+  scope_owner:
+    description: "Data scope owner email"
+    default: "data-owner@company.com"
+
+  catalog_env:
+    description: "Catalog environment"
+    default: dev
+
+  root_path_src:
+    default: ../src
+
+  app_id:
+    description: "APP ID"
+    default: "app_id"
+
+  sp_application_id:
+    description: "Service Principal use to run job"
+    default: "sp_application_id_not_set"
+
+  dollaru_group_name:
+    description: "iPaaS group name for DollarU to run jobs"
+    default: ""
+
+  project_team_group:
+    description: "Databricks group for project team access"
+    default: "dp-project-finance_analytics-it-team"
+
+  job_schedule_status:
+    description: "Whether the job should run automatically"
+    default: "PAUSED"
+
+  interval_days:
+    description: "Number of days to look back for data ingestion"
+    default: "1"
+
+  it_catalog_name:
+    description: "Unity Catalog name for IT Security domain"
+    default: "it_security"
+
+workspace:
+  root_path: /Workspace/projects/${var.domain}/${bundle.name}/.bundle/${bundle.target}
+
+run_as:
+  service_principal_name: ${var.sp_application_id}
+
+permissions:
+  - group_name: "dp-project-finance_analytics-owner"
+    level: CAN_MANAGE
+  - group_name: "dp-project-it_analytics-owner"
+    level: CAN_MANAGE
+  - group_name: "${var.dollaru_group_name}"
+    level: CAN_RUN
+  - group_name: "${var.project_team_group}"
+    level: CAN_VIEW
+  - service_principal_name: ${var.sp_application_id}
+    level: CAN_MANAGE

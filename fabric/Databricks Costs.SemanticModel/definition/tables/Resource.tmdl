@@ -1,0 +1,98 @@
+/// Dimension table containing Databricks resources (jobs, clusters, warehouses, pipelines, apps) used to attribute usage cost to what generated the workload.
+table Resource
+	lineageTag: ce3b673a-5779-43db-bd7e-9e1feed675e6
+
+	/// Surrogate key uniquely identifying each resource row. Hidden; used only for model relationships.
+	column 'Resource Key'
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 7eec23d6-417b-42f8-9585-607d537a29da
+		summarizeBy: none
+		sourceColumn: resource_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Type of Databricks resource, e.g. job, cluster, warehouse, pipeline, or app.
+	column 'Resource Type'
+		dataType: string
+		lineageTag: da2db9db-2ebd-45be-bf11-ad625eca85a0
+		summarizeBy: none
+		sourceColumn: resource_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Resource identifier from the Databricks source system.
+	column 'Source ID'
+		dataType: string
+		lineageTag: d2816ca8-1724-42d0-b148-5265df740622
+		summarizeBy: none
+		sourceColumn: source_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks account identifier the resource belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 373c8f3b-0ac5-4fe3-a2c2-5d209da775e6
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the workspace the resource belongs to. Hidden; used for filtering and lineage.
+	column 'Workspace ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 1733e2d0-3591-4e81-8248-681f0afde29a
+		summarizeBy: none
+		sourceColumn: workspace_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Display name of the resource.
+	column 'Resource Name'
+		dataType: string
+		lineageTag: 33ed5f25-3635-4ca2-a98e-bf5c52b62fbb
+		summarizeBy: none
+		sourceColumn: display_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity that owns the resource.
+	column 'Owned By'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 3e371f71-17dc-4c74-b3b8-e0bd0ee2a1ba
+		summarizeBy: none
+		sourceColumn: owned_by_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether the resource is currently active (Yes) or inactive (No).
+	column 'Is Active'
+		dataType: string
+		lineageTag: c17dfec9-3251-4f51-b356-4b9a1fffc3c4
+		summarizeBy: none
+		sourceColumn: is_active_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Resource = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vd_pbi_resource_View = Source{[Name="vd_pbi_resource",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vd_pbi_resource_View,{"resource_id", "resource_type_lb", "source_cd", "account_cd", "workspace_cd", "display_name_lb", "owned_by_cd", "is_active_fl"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

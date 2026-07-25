@@ -1,0 +1,293 @@
+/// Fact table containing one row per Databricks billing usage record, with cost, quantity, and attribution keys to the Resource, Identity, Workspace, and Calendar dimensions.
+table Costs
+	lineageTag: fa4b945c-4a19-4142-bf8e-140ed9c5e5e5
+
+	/// Unique identifier of the billing usage record.
+	column 'Record ID'
+		dataType: string
+		lineageTag: 3769a7c4-f538-4704-bc9c-7499854d6958
+		summarizeBy: none
+		sourceColumn: record_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date the usage record was ingested into the system.
+	column 'Ingestion Date'
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 1d51b101-76a6-4599-a16a-7fbbf8e592c6
+		summarizeBy: none
+		sourceColumn: ingestion_dt
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Date the usage occurred. Primary date used for time-based analysis, joined to the Calendar table.
+	column 'Usage Date'
+		dataType: dateTime
+		isHidden
+		formatString: Long Date
+		isAvailableInMdx: false
+		lineageTag: 14ac3bdd-c710-4bab-8163-59b13f0e8b96
+		summarizeBy: none
+		sourceColumn: usage_dt
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Databricks account identifier the usage record belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: b64235ce-ca0e-4232-a5e0-e9c31ef252be
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Foreign key linking to the Workspace table. Hidden; used only for model relationships.
+	column 'Workspace Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: e13de764-f78e-4158-8165-95c784acc3a9
+		summarizeBy: sum
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Type of billing record, e.g. usage or correction.
+	column 'Record Type'
+		dataType: string
+		lineageTag: a4f16b25-a824-4301-bd1e-afa5a0be7efd
+		summarizeBy: none
+		sourceColumn: record_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks product associated with the usage, e.g. Jobs, SQL, Model Serving.
+	column Product
+		dataType: string
+		lineageTag: 13037095-932e-4959-9f65-0625cfc447c6
+		summarizeBy: none
+		sourceColumn: product_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Category of usage, e.g. compute or storage.
+	column 'Usage Type'
+		dataType: string
+		lineageTag: 887c8cd3-695a-4060-a08b-bea6ec20f005
+		summarizeBy: none
+		sourceColumn: usage_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Name of the billing SKU consumed.
+	column 'SKU Name'
+		dataType: string
+		lineageTag: b9945735-59bd-4707-a718-da2513569aae
+		summarizeBy: none
+		sourceColumn: sku_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Unit of measure for the usage quantity, e.g. DBU.
+	column 'Usage Unit'
+		dataType: string
+		lineageTag: 8e2ac6df-9b63-472f-9dc3-0f23fc124f90
+		summarizeBy: none
+		sourceColumn: usage_unit_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Quantity of usage consumed, measured in Usage Unit.
+	column 'Usage Quantity'
+		dataType: double
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: e59f0bfe-ade2-45e2-b8a6-d05bd2062970
+		summarizeBy: sum
+		sourceColumn: usage_quantity_nb
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Cost in US dollars for the usage line.
+	column 'Cost (USD)'
+		dataType: double
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 8cce5897-628e-457e-ab4e-ded5ea95c759
+		summarizeBy: sum
+		sourceColumn: line_cost_usd
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Flag indicating whether the usage was on serverless compute (Yes) or not (No).
+	column 'Is Serverless'
+		dataType: string
+		lineageTag: e3ba959b-6b4a-43f3-8db1-1e4e39172db2
+		summarizeBy: none
+		sourceColumn: is_serverless_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether the usage was Photon-accelerated (Yes) or not (No).
+	column 'Is Photon'
+		dataType: string
+		lineageTag: 25cf29b5-42a5-490e-bd40-a1b638840ac1
+		summarizeBy: none
+		sourceColumn: is_photon_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks Jobs pricing tier associated with the usage, when applicable.
+	column 'Jobs Tier'
+		dataType: string
+		lineageTag: bd29c7d6-813c-49fe-8e28-adcb2d1edf66
+		summarizeBy: none
+		sourceColumn: jobs_tier_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the job that generated the usage, when applicable.
+	column 'Job ID'
+		dataType: string
+		lineageTag: c00eb523-0cc4-47f7-b242-1aa1e97ef9eb
+		summarizeBy: none
+		sourceColumn: job_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the cluster that generated the usage, when applicable.
+	column 'Cluster ID'
+		dataType: string
+		lineageTag: d43b11f8-d73f-46d9-9ec1-4ecf6a772303
+		summarizeBy: none
+		sourceColumn: cluster_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the SQL warehouse that generated the usage, when applicable.
+	column 'Warehouse ID'
+		dataType: string
+		lineageTag: de08ca9c-4720-4e1e-bc13-f653c39adb89
+		summarizeBy: none
+		sourceColumn: warehouse_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the Delta Live Tables pipeline that generated the usage, when applicable.
+	column 'Pipeline ID'
+		dataType: string
+		lineageTag: 7f078a22-da86-4556-943c-cf4e1b34bb44
+		summarizeBy: none
+		sourceColumn: pipeline_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the app that generated the usage, when applicable.
+	column 'App ID'
+		dataType: string
+		lineageTag: b5949a5d-4ccc-4dea-a41f-8c7a22f69f42
+		summarizeBy: none
+		sourceColumn: app_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the notebook that generated the usage, when applicable.
+	column 'Notebook ID'
+		dataType: string
+		lineageTag: 70f08d50-0a40-440a-98b9-1c0fe36e8e6b
+		summarizeBy: none
+		sourceColumn: notebook_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identifier of the serving endpoint that generated the usage, when applicable.
+	column 'Endpoint ID'
+		dataType: string
+		lineageTag: 626d6112-a0d5-4c59-affc-2a2a87d073ca
+		summarizeBy: none
+		sourceColumn: endpoint_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Client used to connect to the Databricks workspace for the usage, e.g. JDBC/ODBC or notebook.
+	column 'Network Client'
+		dataType: string
+		lineageTag: af4d1ed6-bea8-4bb8-a938-980ce17cbd5d
+		summarizeBy: none
+		sourceColumn: network_client_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Compute node instance type used for the usage.
+	column 'Node Type'
+		dataType: string
+		lineageTag: 4d883dec-f6c2-4834-a28c-6d20e001dc47
+		summarizeBy: none
+		sourceColumn: node_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity the workload was run as.
+	column 'Run As'
+		dataType: string
+		lineageTag: e6aefaa9-77c3-417d-ba95-cb3f42502218
+		summarizeBy: none
+		sourceColumn: run_as_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Foreign key linking to the Resource table. Hidden; used only for model relationships.
+	column 'Resource Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: c1bb6e8d-9bae-4f87-bf6c-c1fbe9fc32f3
+		summarizeBy: none
+		sourceColumn: resource_id
+
+		annotation SummarizationSetBy = User
+
+	/// Foreign key linking to the Identity table. Hidden; used only for model relationships.
+	column 'Identity Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 322fc41b-2f69-4d54-a038-d096d34eb092
+		summarizeBy: none
+		sourceColumn: identity_id
+
+		annotation SummarizationSetBy = User
+
+	column dqm_cd
+		dataType: string
+		lineageTag: 7362ced3-bfe2-43cd-bf77-4f50932e3091
+		summarizeBy: none
+		sourceColumn: dqm_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Costs = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vf_pbi_billing_cost_View = Source{[Name="vf_pbi_billing_cost",Kind="View"]}[Data]
+				in
+				    vf_pbi_billing_cost_View
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

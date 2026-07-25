@@ -1,0 +1,53 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "6f2beae4400147e00a2d",
+  "displayName": "Activity Detail",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "14D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "displayArea": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Middle'"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "24013ac68996b9b3303a",
+      "target": "32d918b630148ea85dd4",
+      "type": "NoFilter"
+    },
+    {
+      "source": "32d918b630148ea85dd4",
+      "target": "d8b7c2ac370500a5cab2",
+      "type": "NoFilter"
+    },
+    {
+      "source": "32d918b630148ea85dd4",
+      "target": "24013ac68996b9b3303a",
+      "type": "NoFilter"
+    }
+  ]
+}

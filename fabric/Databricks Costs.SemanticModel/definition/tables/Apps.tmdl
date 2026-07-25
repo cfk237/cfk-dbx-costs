@@ -1,0 +1,57 @@
+table Apps
+	lineageTag: 5055ff65-efe8-4ad4-b627-be3308d011f5
+
+	column 'Application Code'
+		dataType: string
+		lineageTag: 66a47f5b-2cbd-4173-a4b1-7145e1e09037
+		summarizeBy: none
+		sourceColumn: Application Code
+
+		annotation SummarizationSetBy = Automatic
+
+	column Application
+		dataType: string
+		lineageTag: 1d7ecc9a-38e3-4929-92ad-09b2e01bbf4d
+		summarizeBy: none
+		sourceColumn: Application
+
+		annotation SummarizationSetBy = Automatic
+
+	column Domain
+		dataType: string
+		lineageTag: 90753788-2cae-48f5-aadd-e193aab0d381
+		summarizeBy: none
+		sourceColumn: Domain
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Sub Domain'
+		dataType: string
+		lineageTag: 361d3047-4f7e-4776-afc7-c7f1a74b07b0
+		summarizeBy: none
+		sourceColumn: Sub Domain
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Apps = m
+		mode: import
+		source =
+				let
+				  Source = Excel.Workbook(Web.Contents("https://ipsengroup.sharepoint.com/sites/DevsPowerBI/Documents%20partages/Databricks%20Cost/APP_ID.xlsx"), null, true),
+				  #"Navigation 1" = Source{[Item = "TD_IOS_INF_APPLICATIONS", Kind = "Sheet"]}[Data],
+				  #"Promoted headers" = Table.PromoteHeaders(#"Navigation 1", [PromoteAllScalars = true]),
+				  #"Changed column type" = Table.TransformColumnTypes(#"Promoted headers", {{"APPLICATION_ID", Int64.Type}, {"APPLICATION_SYSTEM_CD", type text}, {"APPLICATION_CD", type text}, {"APPLICATION_LB", type text}, {"APPLICATION_IT_DOMAIN_MANAGER_ID", Int64.Type}, {"APPLICATION_MANAGER_ID", Int64.Type}, {"APPLICATION_BUSINESS_OWNER_ID", Int64.Type}, {"APPLICATION_CREATED_DD", type datetime}, {"DOMAIN_ID", Int64.Type}, {"SUB_DOMAIN_ID", Int64.Type}, {"STATE_ID", Int64.Type}, {"APPLICATION_GXP_FL", Int64.Type}, {"SYS_ACTIVE_FL", Int64.Type}, {"SYS_SOURCE_CD", type text}, {"SYS_ORIGIN_CD", type text}, {"SYS_UPDATE_DT", type datetime}}, "en-US"),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed column type",{"APPLICATION_SYSTEM_CD", "APPLICATION_IT_DOMAIN_MANAGER_ID", "APPLICATION_MANAGER_ID", "APPLICATION_BUSINESS_OWNER_ID", "APPLICATION_CREATED_DD", "STATE_ID", "APPLICATION_GXP_FL", "SYS_ACTIVE_FL", "SYS_SOURCE_CD", "SYS_ORIGIN_CD", "SYS_UPDATE_DT"}),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Columns", {"DOMAIN_ID"}, Domains, {"DOMAIN_ID"}, "Domains", JoinKind.LeftOuter),
+				    #"Expanded Domains" = Table.ExpandTableColumn(#"Merged Queries", "Domains", {"DOMAIN_LB"}, {"DOMAIN_LB"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Expanded Domains", {"SUB_DOMAIN_ID"}, #"Sub Domains", {"SUB_DOMAIN_ID"}, "Sub Domains", JoinKind.LeftOuter),
+				    #"Expanded Sub Domains" = Table.ExpandTableColumn(#"Merged Queries1", "Sub Domains", {"SUB_DOMAIN_LB"}, {"SUB_DOMAIN_LB"}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Expanded Sub Domains",{"APPLICATION_ID", "DOMAIN_ID", "SUB_DOMAIN_ID"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns1",{{"DOMAIN_LB", "Domain"}, {"SUB_DOMAIN_LB", "Sub Domain"}, {"APPLICATION_LB", "Application"}, {"APPLICATION_CD", "Application Code"}})
+				in
+				  #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

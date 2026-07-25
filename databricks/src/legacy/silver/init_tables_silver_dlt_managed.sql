@@ -1,0 +1,773 @@
+-- Databricks notebook source
+-- DBTITLE 1,Notebook Summary
+-- MAGIC %md
+-- MAGIC ## Silver — Init Tables (DLT-managed, legacy reference)
+-- MAGIC
+-- MAGIC Historical DDL for tables now declared by `dlt.create_streaming_table()` in
+-- MAGIC `pipelines/silver/silver_dimensions.py` and `silver_billing.py`. DLT creates and owns
+-- MAGIC these tables — this notebook is **not** part of the normal setup flow and should not be
+-- MAGIC run against an environment where the DLT silver pipeline already manages them.
+-- MAGIC
+-- MAGIC Kept for two purposes:
+-- MAGIC 1. **Schema reference** — the original DDL these DLT declarations were derived from.
+-- MAGIC 2. **First-time DLT setup** — if these tables were ever created as plain managed tables
+-- MAGIC    (e.g. by an older version of `init_tables_silver.sql`), DLT cannot take ownership of
+-- MAGIC    them and throws `MANAGED_TABLE_EXISTS`. Run the DROP cell below once, then trigger a
+-- MAGIC    full-refresh run of the silver pipeline (`resources/pipelines.yml` — DLT creates the tables), then run
+-- MAGIC    `init_post_dlt_silver.sql` to insert sentinel rows.
+-- MAGIC
+-- MAGIC Non-DLT objects (`td_account`, `tf_billing_cost`, `tr_resource_tag`, `td_tag_key`,
+-- MAGIC `td_workspace`, `td_billing_list_price`, `td_user`, `td_service_principal`,
+-- MAGIC `td_identity`, `td_resource`) stay in `notebooks/silver/init_tables_silver.sql`.
+-- MAGIC `td_workspace` and `td_billing_list_price` both moved here from DLT — they're now
+-- MAGIC populated by MERGE notebooks (`silver_workspace.sql`, `silver_billing_cost.sql`) against
+-- MAGIC `access_workspaces_latest`/`billing_list_prices`, full-overwrite snapshots that can't
+-- MAGIC safely be streamed. `td_user`, `td_service_principal`, and `td_identity` moved the same
+-- MAGIC way — now populated by `silver_identity.sql` against `account_users`/
+-- MAGIC `account_service_principals`, upserted with soft-delete by an Account API export job (a
+-- MAGIC row-level MERGE source, same reasoning). `td_resource` also moved — now populated by
+-- MAGIC `silver_resource.sql` (plain MERGE, no watermark), because its 8 source tables are
+-- MAGIC themselves `apply_changes()`-managed and receive row-level UPDATEs that a streaming
+-- MAGIC `UNION` can't tolerate without silently dropping changes via `skipChangeCommits`.
+-- MAGIC `mvf_query_cost_attribution` is owned by the `attributed_cost` DLT pipeline
+-- MAGIC (`pipelines/silver/silver_query_cost_attribution.sql`).
+-- MAGIC `_pipeline_watermarks` is retired from the active flow — recreate it from the legacy
+-- MAGIC notebooks' DDL if you ever need to run them.
+
+-- COMMAND ----------
+
+-- MAGIC %python
+-- MAGIC dbutils.widgets.text("catalog_env", "dev")
+-- MAGIC catalog_env = dbutils.widgets.get("catalog_env")
+-- MAGIC
+-- MAGIC dbutils.widgets.text("catalog_name", "it_security")
+-- MAGIC catalog_name = dbutils.widgets.get("catalog_name")
+-- MAGIC
+-- MAGIC catalog = f"{catalog_name}_{catalog_env}"
+-- MAGIC silver_schema = "global_it_hub"
+-- MAGIC
+-- MAGIC spark.sql(f"USE CATALOG {catalog}")
+-- MAGIC spark.sql(f"USE SCHEMA {silver_schema}")
+
+-- COMMAND ----------
+
+-- DBTITLE 1,Drop DLT-managed tables (run before first DLT pipeline execution)
+-- WARNING: drops all tables managed by the DLT silver pipeline (silver_dimensions + silver_billing).
+-- Required when these tables were previously created by this file — DLT cannot take
+-- ownership of a regular managed table and will throw MANAGED_TABLE_EXISTS.
+-- After dropping, run the DLT pipeline, then run init_post_dlt_silver.sql for sentinel rows.
+DROP TABLE IF EXISTS global_it_hub.tf_billing_usage;
+DROP TABLE IF EXISTS global_it_hub.td_billing_list_price;
+DROP TABLE IF EXISTS global_it_hub.td_resource;
+DROP TABLE IF EXISTS global_it_hub.td_identity;
+DROP TABLE IF EXISTS global_it_hub.td_billing_app;
+DROP TABLE IF EXISTS global_it_hub.td_billing_notebook;
+DROP TABLE IF EXISTS global_it_hub.td_billing_endpoint;
+DROP TABLE IF EXISTS global_it_hub.td_billing_network;
+DROP TABLE IF EXISTS global_it_hub.td_user;
+DROP TABLE IF EXISTS global_it_hub.td_service_principal;
+DROP TABLE IF EXISTS global_it_hub.td_workspace;
+DROP TABLE IF EXISTS global_it_hub.td_lakeflow_job;
+DROP TABLE IF EXISTS global_it_hub.td_lakeflow_job_history;
+DROP TABLE IF EXISTS global_it_hub.td_lakeflow_pipeline;
+DROP TABLE IF EXISTS global_it_hub.td_lakeflow_pipeline_history;
+DROP TABLE IF EXISTS global_it_hub.td_compute_cluster;
+DROP TABLE IF EXISTS global_it_hub.td_compute_cluster_history;
+DROP TABLE IF EXISTS global_it_hub.td_compute_warehouse;
+DROP TABLE IF EXISTS global_it_hub.td_compute_warehouse_history;
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_workspace
+-- Workspace dimension: one row per (account_id, workspace_id_cd), SCD1 (current state only).
+-- Sourced from system.access.workspaces_latest — already provides latest state, no history needed.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_workspace (
+  workspace_id      BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id        STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd   STRING    NOT NULL COMMENT 'Workspace identifier — natural key (source: workspace_id)',
+  workspace_name_lb STRING             COMMENT 'Human-readable workspace name (source: workspace_name)',
+  workspace_url_lb  STRING             COMMENT 'Workspace web URL (source: workspace_url)',
+  create_dt         TIMESTAMP          COMMENT 'When the workspace was created — immutable (source: create_time)',
+  status_lb         STRING             COMMENT 'Current state: NOT_PROVISIONED, PROVISIONING, RUNNING, FAILED, BANNED (source: status)',
+  -- Audit
+  sys_create_dt     TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt     TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Workspace dimension sourced from system.access.workspaces_latest. One row per workspace per account.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_workspace — default rows
+MERGE INTO global_it_hub.td_workspace AS tgt
+USING (
+  VALUES
+    (-3, 'Z_DEL', 'Z_DEL', 'Z_Deleted',    'Z_DEL', 'Z_DEL'),
+    (-2, 'Z_UNS', 'Z_UNS', 'Z_Unassigned', 'Z_UNS', 'Z_UNS'),
+    (-1, 'Z_UNK', 'Z_UNK', 'Z_Unknown',    'Z_UNK', 'Z_UNK')
+  AS src(workspace_id, account_id, workspace_id_cd, workspace_name_lb, workspace_url_lb, status_lb)
+) ON tgt.workspace_id = src.workspace_id
+WHEN NOT MATCHED THEN INSERT (workspace_id, account_id, workspace_id_cd, workspace_name_lb, workspace_url_lb, status_lb, sys_create_dt, sys_update_dt)
+VALUES (src.workspace_id, src.account_id, src.workspace_id_cd, src.workspace_name_lb, src.workspace_url_lb, src.status_lb, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_job_history
+-- Full SCD2 history: one row per (workspace_id_cd, job_id_cd, change_time).
+-- valid_to_dt is NULL for the open / current version.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_lakeflow_job_history (
+  account_id         STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd    STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  job_id_cd          STRING              NOT NULL COMMENT 'Unique job identifier — natural key from source',
+  job_name_lb        STRING                       COMMENT 'Job display name at this version',
+  description_lb     STRING                       COMMENT 'Job description at this version',
+  creator_userid_cd  STRING                       COMMENT 'Email, service principal ID, or group name of the job creator (source: creator_user_name)',
+  create_dt          TIMESTAMP                    COMMENT 'When the job was first created in Databricks — immutable (source: create_time)',
+  run_as_cd          STRING                       COMMENT 'ID of the user or service principal whose permissions are used for job execution (source: run_as)',
+  run_as_user_lb     STRING                       COMMENT 'Email, service principal ID, or group name used for job execution (source: run_as_user_name)',
+  tags               MAP<STRING, STRING>           COMMENT 'Job tags at this version',
+  -- SCD2 validity window
+  valid_from_dt      TIMESTAMP           NOT NULL COMMENT 'Version effective start — equals source change_time',
+  valid_to_dt        TIMESTAMP                    COMMENT 'Version effective end — NULL for the open/current version',
+  is_current_fl      INT                 NOT NULL COMMENT '1 = latest version of this job, 0 = historical',
+  is_deleted_fl      INT                 NOT NULL COMMENT '1 = job has been deleted in source',
+  delete_dt          TIMESTAMP                    COMMENT 'Timestamp when the job was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'SCD2 full history of Lakeflow job configurations. One row per job version with explicit validity windows.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_job
+-- Current-state snapshot: one row per (workspace_id_cd, job_id_cd), always the latest version.
+-- Deleted jobs are kept with is_deleted_fl = 1 to preserve lineage.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_lakeflow_job (
+  job_id             BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id         STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd    STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  job_id_cd          STRING              NOT NULL COMMENT 'Unique job identifier — natural key from source',
+  job_name_lb        STRING                       COMMENT 'Current job display name',
+  description_lb     STRING                       COMMENT 'Current job description',
+  creator_userid_cd  STRING                       COMMENT 'Email, service principal ID, or group name of the job creator (source: creator_user_name)',
+  create_dt          TIMESTAMP                    COMMENT 'When the job was first created in Databricks — immutable (source: create_time)',
+  run_as_cd          STRING                       COMMENT 'ID of the user or service principal whose permissions are used for job execution (source: run_as)',
+  run_as_user_lb     STRING                       COMMENT 'Email, service principal ID, or group name used for job execution (source: run_as_user_name)',
+  tags               MAP<STRING, STRING>           COMMENT 'Current job tags',
+  valid_from_dt      TIMESTAMP           NOT NULL COMMENT 'When the current version became active',
+  is_deleted_fl      INT                 NOT NULL COMMENT '1 = job has been deleted in source',
+  delete_dt          TIMESTAMP                    COMMENT 'Timestamp when the job was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of each Lakeflow job. One row per job, always the latest version.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_job — default rows
+MERGE INTO global_it_hub.td_lakeflow_job AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'Unassigned', 'Unassigned', 'UNS', CURRENT_TIMESTAMP(), 'UNS', 'Unassigned', NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+    (-1, 'UNK', 'UNK', 'UNK', 'Unknown',    'Unknown',    'UNK', CURRENT_TIMESTAMP(), 'UNK', 'Unknown',    NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
+  AS src(job_id, account_id, workspace_id_cd, job_id_cd, job_name_lb, description_lb, creator_userid_cd, create_dt, run_as_cd, run_as_user_lb, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+) ON tgt.job_id = src.job_id
+WHEN NOT MATCHED THEN INSERT (job_id, account_id, workspace_id_cd, job_id_cd, job_name_lb, description_lb, creator_userid_cd, create_dt, run_as_cd, run_as_user_lb, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+VALUES (src.job_id, src.account_id, src.workspace_id_cd, src.job_id_cd, src.job_name_lb, src.description_lb, src.creator_userid_cd, src.create_dt, src.run_as_cd, src.run_as_user_lb, src.tags, src.valid_from_dt, src.is_deleted_fl, src.delete_dt, src.sys_create_dt, src.sys_update_dt);
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_pipeline_history
+-- Full SCD2 history: one row per (workspace_id_cd, pipeline_id_cd, change_time).
+-- valid_to_dt is NULL for the open / current version.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_lakeflow_pipeline_history (
+  account_id         STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd    STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  pipeline_id_cd        STRING              NOT NULL COMMENT 'Unique pipeline identifier — natural key from source',
+  pipeline_type_lb   STRING                       COMMENT 'Pipeline category (e.g. ETL_PIPELINE, MATERIALIZED_VIEW) (source: pipeline_type)',
+  pipeline_name_lb   STRING                       COMMENT 'Pipeline display name at this version (source: name)',
+  created_by_cd      STRING                       COMMENT 'Email, service principal ID, or group name of the pipeline creator (source: created_by)',
+  create_dt          TIMESTAMP                    COMMENT 'When the pipeline was first created in Databricks — immutable (source: create_time)',
+  run_as_cd          STRING                       COMMENT 'Email, service principal ID, or group name used for pipeline execution (source: run_as)',
+  tags               MAP<STRING, STRING>           COMMENT 'Pipeline tags at this version',
+  configuration      MAP<STRING, STRING>           COMMENT 'User-supplied pipeline configuration key-value pairs at this version',
+  -- SCD2 validity window
+  valid_from_dt      TIMESTAMP           NOT NULL COMMENT 'Version effective start — equals source change_time',
+  valid_to_dt        TIMESTAMP                    COMMENT 'Version effective end — NULL for the open/current version',
+  is_current_fl      INT                 NOT NULL COMMENT '1 = latest version of this pipeline, 0 = historical',
+  is_deleted_fl      INT                 NOT NULL COMMENT '1 = pipeline has been deleted in source',
+  delete_dt          TIMESTAMP                    COMMENT 'Timestamp when the pipeline was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'SCD2 full history of Lakeflow pipeline configurations. One row per pipeline version with explicit validity windows.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_pipeline
+-- Current-state snapshot: one row per (workspace_id_cd, pipeline_id_cd), always the latest version.
+-- Deleted pipelines are kept with is_deleted_fl = 1 to preserve lineage.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_lakeflow_pipeline (
+  pipeline_id        BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id         STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd    STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  pipeline_id_cd        STRING              NOT NULL COMMENT 'Unique pipeline identifier — natural key from source',
+  pipeline_type_lb   STRING                       COMMENT 'Pipeline category (e.g. ETL_PIPELINE, MATERIALIZED_VIEW) (source: pipeline_type)',
+  pipeline_name_lb   STRING                       COMMENT 'Current pipeline display name (source: name)',
+  created_by_cd      STRING                       COMMENT 'Email, service principal ID, or group name of the pipeline creator (source: created_by)',
+  create_dt          TIMESTAMP                    COMMENT 'When the pipeline was first created in Databricks — immutable (source: create_time)',
+  run_as_cd          STRING                       COMMENT 'Email, service principal ID, or group name used for pipeline execution (source: run_as)',
+  tags               MAP<STRING, STRING>           COMMENT 'Current pipeline tags',
+  configuration      MAP<STRING, STRING>           COMMENT 'Current user-supplied pipeline configuration key-value pairs',
+  valid_from_dt      TIMESTAMP           NOT NULL COMMENT 'When the current version became active',
+  is_deleted_fl      INT                 NOT NULL COMMENT '1 = pipeline has been deleted in source',
+  delete_dt          TIMESTAMP                    COMMENT 'Timestamp when the pipeline was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt      TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of each Lakeflow pipeline. One row per pipeline, always the latest version.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_lakeflow_pipeline — default rows
+MERGE INTO global_it_hub.td_lakeflow_pipeline AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'UNS', 'Unassigned', 'UNS', CURRENT_TIMESTAMP(), 'UNS', NULL, NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+    (-1, 'UNK', 'UNK', 'UNK', 'UNK', 'Unknown',    'UNK', CURRENT_TIMESTAMP(), 'UNK', NULL, NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
+  AS src(pipeline_id, account_id, workspace_id_cd, pipeline_id_cd, pipeline_type_lb, pipeline_name_lb, created_by_cd, create_dt, run_as_cd, tags, configuration, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+) ON tgt.pipeline_id = src.pipeline_id
+WHEN NOT MATCHED THEN INSERT (pipeline_id, account_id, workspace_id_cd, pipeline_id_cd, pipeline_type_lb, pipeline_name_lb, created_by_cd, create_dt, run_as_cd, tags, configuration, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+VALUES (src.pipeline_id, src.account_id, src.workspace_id_cd, src.pipeline_id_cd, src.pipeline_type_lb, src.pipeline_name_lb, src.created_by_cd, src.create_dt, src.run_as_cd, src.tags, src.configuration, src.valid_from_dt, src.is_deleted_fl, src.delete_dt, src.sys_create_dt, src.sys_update_dt);
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_cluster_history
+-- Full SCD2 history: one row per (workspace_id_cd, cluster_id_cd, change_time).
+-- Cloud-specific structs (aws/azure/gcp_attributes) and init_scripts are excluded.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_compute_cluster_history (
+  account_id                  STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd             STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  cluster_id_cd                  STRING              NOT NULL COMMENT 'Unique cluster identifier — natural key from source',
+  cluster_name_lb             STRING                       COMMENT 'User-defined cluster name at this version (source: cluster_name)',
+  owned_by_cd                 STRING                       COMMENT 'Username of the cluster owner at this version (source: owned_by)',
+  create_dt                   TIMESTAMP                    COMMENT 'When the cluster was first created in Databricks — immutable (source: create_time)',
+  cluster_source_lb           STRING                       COMMENT 'Origin of the cluster creation: UI, API, JOB, PIPELINE, or PIPELINE_MAINTENANCE — immutable (source: cluster_source)',
+  dbr_version_lb              STRING                       COMMENT 'Databricks Runtime version at this version (source: dbr_version)',
+  driver_node_type_lb         STRING                       COMMENT 'Driver node instance type at this version (source: driver_node_type)',
+  worker_node_type_lb         STRING                       COMMENT 'Worker node instance type at this version (source: worker_node_type)',
+  worker_count_nb             BIGINT                       COMMENT 'Fixed worker count — populated for fixed-size clusters only (source: worker_count)',
+  min_autoscale_workers_nb    BIGINT                       COMMENT 'Minimum worker count for autoscaling clusters (source: min_autoscale_workers)',
+  max_autoscale_workers_nb    BIGINT                       COMMENT 'Maximum worker count for autoscaling clusters (source: max_autoscale_workers)',
+  auto_termination_minutes_nb BIGINT                       COMMENT 'Configured auto-termination duration in minutes (source: auto_termination_minutes)',
+  enable_elastic_disk_fl      INT                          COMMENT '1 = autoscaling disk enabled (source: enable_elastic_disk)',
+  driver_instance_pool_id_cd  STRING                       COMMENT 'Instance pool ID used by the driver node, if any (source: driver_instance_pool_id)',
+  worker_instance_pool_id_cd  STRING                       COMMENT 'Instance pool ID used by worker nodes, if any (source: worker_instance_pool_id)',
+  data_security_mode_lb       STRING                       COMMENT 'Access mode of the compute resource (source: data_security_mode)',
+  policy_id_cd                STRING                       COMMENT 'Compute policy ID applied to this cluster, if any (source: policy_id)',
+  tags                        MAP<STRING, STRING>           COMMENT 'User-defined cluster tags at this version',
+  -- SCD2 validity window
+  valid_from_dt               TIMESTAMP           NOT NULL COMMENT 'Version effective start — equals source change_time',
+  valid_to_dt                 TIMESTAMP                    COMMENT 'Version effective end — NULL for the open/current version',
+  is_current_fl               INT                 NOT NULL COMMENT '1 = latest version of this cluster, 0 = historical',
+  is_deleted_fl               INT                 NOT NULL COMMENT '1 = cluster has been deleted in source',
+  delete_dt                   TIMESTAMP                    COMMENT 'Timestamp when the cluster was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt               TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt               TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'SCD2 full history of compute cluster configurations. One row per cluster version with explicit validity windows.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_cluster
+-- Current-state snapshot: one row per (workspace_id_cd, cluster_id_cd), always the latest version.
+-- Deleted clusters are kept with is_deleted_fl = 1 to preserve lineage.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_compute_cluster (
+  cluster_id                  BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id                  STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd             STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  cluster_id_cd                  STRING              NOT NULL COMMENT 'Unique cluster identifier — natural key from source',
+  cluster_name_lb             STRING                       COMMENT 'Current user-defined cluster name (source: cluster_name)',
+  owned_by_cd                 STRING                       COMMENT 'Current username of the cluster owner (source: owned_by)',
+  create_dt                   TIMESTAMP                    COMMENT 'When the cluster was first created in Databricks — immutable (source: create_time)',
+  cluster_source_lb           STRING                       COMMENT 'Origin of the cluster creation: UI, API, JOB, PIPELINE, or PIPELINE_MAINTENANCE — immutable (source: cluster_source)',
+  dbr_version_lb              STRING                       COMMENT 'Current Databricks Runtime version (source: dbr_version)',
+  driver_node_type_lb         STRING                       COMMENT 'Current driver node instance type (source: driver_node_type)',
+  worker_node_type_lb         STRING                       COMMENT 'Current worker node instance type (source: worker_node_type)',
+  worker_count_nb             BIGINT                       COMMENT 'Current fixed worker count — populated for fixed-size clusters only (source: worker_count)',
+  min_autoscale_workers_nb    BIGINT                       COMMENT 'Current minimum worker count for autoscaling clusters (source: min_autoscale_workers)',
+  max_autoscale_workers_nb    BIGINT                       COMMENT 'Current maximum worker count for autoscaling clusters (source: max_autoscale_workers)',
+  auto_termination_minutes_nb BIGINT                       COMMENT 'Current auto-termination duration in minutes (source: auto_termination_minutes)',
+  enable_elastic_disk_fl      INT                          COMMENT '1 = autoscaling disk currently enabled (source: enable_elastic_disk)',
+  driver_instance_pool_id_cd  STRING                       COMMENT 'Current instance pool ID used by the driver node, if any (source: driver_instance_pool_id)',
+  worker_instance_pool_id_cd  STRING                       COMMENT 'Current instance pool ID used by worker nodes, if any (source: worker_instance_pool_id)',
+  data_security_mode_lb       STRING                       COMMENT 'Current access mode of the compute resource (source: data_security_mode)',
+  policy_id_cd                STRING                       COMMENT 'Current compute policy ID applied to this cluster, if any (source: policy_id)',
+  tags                        MAP<STRING, STRING>           COMMENT 'Current user-defined cluster tags',
+  valid_from_dt               TIMESTAMP           NOT NULL COMMENT 'When the current version became active',
+  is_deleted_fl               INT                 NOT NULL COMMENT '1 = cluster has been deleted in source',
+  delete_dt                   TIMESTAMP                    COMMENT 'Timestamp when the cluster was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt               TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt               TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of each compute cluster. One row per cluster, always the latest version.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_cluster — default rows
+MERGE INTO global_it_hub.td_compute_cluster AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'Unassigned', 'UNS', CURRENT_TIMESTAMP(), 'UNS', 'Unassigned', 'Unassigned', 'Unassigned', NULL, NULL, NULL, NULL, 0, NULL, NULL, 'UNS', 'UNS', NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+    (-1, 'UNK', 'UNK', 'UNK', 'Unknown',    'UNK', CURRENT_TIMESTAMP(), 'UNK', 'Unknown',    'Unknown',    'Unknown',    NULL, NULL, NULL, NULL, 0, NULL, NULL, 'UNK', 'UNK', NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
+  AS src(cluster_id, account_id, workspace_id_cd, cluster_id_cd, cluster_name_lb, owned_by_cd, create_dt, cluster_source_lb, dbr_version_lb, driver_node_type_lb, worker_node_type_lb, worker_count_nb, min_autoscale_workers_nb, max_autoscale_workers_nb, auto_termination_minutes_nb, enable_elastic_disk_fl, driver_instance_pool_id_cd, worker_instance_pool_id_cd, data_security_mode_lb, policy_id_cd, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+) ON tgt.cluster_id = src.cluster_id
+WHEN NOT MATCHED THEN INSERT (cluster_id, account_id, workspace_id_cd, cluster_id_cd, cluster_name_lb, owned_by_cd, create_dt, cluster_source_lb, dbr_version_lb, driver_node_type_lb, worker_node_type_lb, worker_count_nb, min_autoscale_workers_nb, max_autoscale_workers_nb, auto_termination_minutes_nb, enable_elastic_disk_fl, driver_instance_pool_id_cd, worker_instance_pool_id_cd, data_security_mode_lb, policy_id_cd, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+VALUES (src.cluster_id, src.account_id, src.workspace_id_cd, src.cluster_id_cd, src.cluster_name_lb, src.owned_by_cd, src.create_dt, src.cluster_source_lb, src.dbr_version_lb, src.driver_node_type_lb, src.worker_node_type_lb, src.worker_count_nb, src.min_autoscale_workers_nb, src.max_autoscale_workers_nb, src.auto_termination_minutes_nb, src.enable_elastic_disk_fl, src.driver_instance_pool_id_cd, src.worker_instance_pool_id_cd, src.data_security_mode_lb, src.policy_id_cd, src.tags, src.valid_from_dt, src.is_deleted_fl, src.delete_dt, src.sys_create_dt, src.sys_update_dt);
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_warehouse_history
+-- Full SCD2 history: one row per (workspace_id_cd, warehouse_id_cd, change_time).
+-- Note: source table has no create_time column — create_dt is absent from this table.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_compute_warehouse_history (
+  account_id           STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd      STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  warehouse_id_cd         STRING              NOT NULL COMMENT 'Unique SQL warehouse identifier — natural key from source',
+  warehouse_name_lb    STRING                       COMMENT 'SQL warehouse display name at this version (source: warehouse_name)',
+  warehouse_type_lb    STRING                       COMMENT 'Warehouse category: CLASSIC, PRO, or SERVERLESS (source: warehouse_type)',
+  warehouse_channel_lb STRING                       COMMENT 'Release channel: CURRENT or PREVIEW (source: warehouse_channel)',
+  warehouse_size_lb    STRING                       COMMENT 'Cluster size from 2X_SMALL to 5X_LARGE (source: warehouse_size)',
+  min_clusters_nb      INT                          COMMENT 'Minimum number of clusters permitted (source: min_clusters)',
+  max_clusters_nb      INT                          COMMENT 'Maximum number of clusters permitted (source: max_clusters)',
+  auto_stop_minutes_nb INT                          COMMENT 'Idle duration in minutes before auto-shutdown (source: auto_stop_minutes)',
+  tags                 MAP<STRING, STRING>           COMMENT 'SQL warehouse tags at this version',
+  -- SCD2 validity window
+  valid_from_dt        TIMESTAMP           NOT NULL COMMENT 'Version effective start — equals source change_time',
+  valid_to_dt          TIMESTAMP                    COMMENT 'Version effective end — NULL for the open/current version',
+  is_current_fl        INT                 NOT NULL COMMENT '1 = latest version of this warehouse, 0 = historical',
+  is_deleted_fl         INT                 NOT NULL COMMENT '1 = warehouse has been deleted in source',
+  delete_dt            TIMESTAMP                    COMMENT 'Timestamp when the warehouse was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt        TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt        TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'SCD2 full history of SQL warehouse configurations. One row per warehouse version with explicit validity windows.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_warehouse
+-- Current-state snapshot: one row per (workspace_id_cd, warehouse_id_cd), always the latest version.
+-- Deleted warehouses are kept with is_deleted_fl = 1 to preserve lineage.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_compute_warehouse (
+  warehouse_id         BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id           STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd      STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  warehouse_id_cd         STRING              NOT NULL COMMENT 'Unique SQL warehouse identifier — natural key from source',
+  warehouse_name_lb    STRING                       COMMENT 'Current SQL warehouse display name (source: warehouse_name)',
+  warehouse_type_lb    STRING                       COMMENT 'Current warehouse category: CLASSIC, PRO, or SERVERLESS (source: warehouse_type)',
+  warehouse_channel_lb STRING                       COMMENT 'Current release channel: CURRENT or PREVIEW (source: warehouse_channel)',
+  warehouse_size_lb    STRING                       COMMENT 'Current cluster size from 2X_SMALL to 5X_LARGE (source: warehouse_size)',
+  min_clusters_nb      INT                          COMMENT 'Current minimum number of clusters permitted (source: min_clusters)',
+  max_clusters_nb      INT                          COMMENT 'Current maximum number of clusters permitted (source: max_clusters)',
+  auto_stop_minutes_nb INT                          COMMENT 'Current idle duration in minutes before auto-shutdown (source: auto_stop_minutes)',
+  tags                 MAP<STRING, STRING>           COMMENT 'Current SQL warehouse tags',
+  valid_from_dt        TIMESTAMP           NOT NULL COMMENT 'When the current version became active',
+  is_deleted_fl        INT                 NOT NULL COMMENT '1 = warehouse has been deleted in source',
+  delete_dt            TIMESTAMP                    COMMENT 'Timestamp when the warehouse was deleted (NULL if still active)',
+  -- Audit
+  sys_create_dt        TIMESTAMP           NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt        TIMESTAMP           NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of each SQL warehouse. One row per warehouse, always the latest version.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_compute_warehouse — default rows
+MERGE INTO global_it_hub.td_compute_warehouse AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'Unassigned', 'UNS', 'UNS', 'UNS', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP()),
+    (-1, 'UNK', 'UNK', 'UNK', 'Unknown',    'UNK', 'UNK', 'UNK', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP(), 0, NULL, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP())
+  AS src(warehouse_id, account_id, workspace_id_cd, warehouse_id_cd, warehouse_name_lb, warehouse_type_lb, warehouse_channel_lb, warehouse_size_lb, min_clusters_nb, max_clusters_nb, auto_stop_minutes_nb, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+) ON tgt.warehouse_id = src.warehouse_id
+WHEN NOT MATCHED THEN INSERT (warehouse_id, account_id, workspace_id_cd, warehouse_id_cd, warehouse_name_lb, warehouse_type_lb, warehouse_channel_lb, warehouse_size_lb, min_clusters_nb, max_clusters_nb, auto_stop_minutes_nb, tags, valid_from_dt, is_deleted_fl, delete_dt, sys_create_dt, sys_update_dt)
+VALUES (src.warehouse_id, src.account_id, src.workspace_id_cd, src.warehouse_id_cd, src.warehouse_name_lb, src.warehouse_type_lb, src.warehouse_channel_lb, src.warehouse_size_lb, src.min_clusters_nb, src.max_clusters_nb, src.auto_stop_minutes_nb, src.tags, src.valid_from_dt, src.is_deleted_fl, src.delete_dt, src.sys_create_dt, src.sys_update_dt);
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_user
+-- Current state of all workspace users. One row per user (SCD1 — latest state only).
+-- Sourced from databricks.sal_users, loaded from the Databricks SCIM API.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_user (
+  user_id          BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id       STRING    NOT NULL COMMENT 'Databricks account identifier',
+  user_id_cd       STRING    NOT NULL COMMENT 'Databricks internal user identifier (source: SCIM id)',
+  username_lb      STRING             COMMENT 'Login username, typically the user email (source: SCIM userName)',
+  display_name_lb  STRING             COMMENT 'Full display name (source: SCIM displayName)',
+  first_name_lb    STRING             COMMENT 'First name (source: SCIM name.givenName)',
+  last_name_lb     STRING             COMMENT 'Last name (source: SCIM name.familyName)',
+  is_active_fl     INT       NOT NULL COMMENT '1 = active user, 0 = deactivated (source: SCIM active)',
+  external_id_cd   STRING             COMMENT 'External identity provider identifier (source: SCIM externalId)',
+  primary_email_lb STRING             COMMENT 'Primary email address (source: SCIM emails[primary].value)',
+  -- Audit
+  sys_create_dt    TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt    TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of all workspace users. One row per user, sourced from Databricks SCIM API.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_user — default rows
+MERGE INTO global_it_hub.td_user AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'Unassigned', 'Unassigned', 'Unassigned', 'Unassigned', 0, 'UNS', 'UNS'),
+    (-1, 'UNK', 'UNK', 'Unknown',    'Unknown',    'Unknown',    'Unknown',    0, 'UNK', 'UNK')
+  AS src(user_id, account_id, user_id_cd, username_lb, display_name_lb, first_name_lb, last_name_lb, is_active_fl, external_id_cd, primary_email_lb)
+) ON tgt.user_id = src.user_id
+WHEN NOT MATCHED THEN INSERT (user_id, account_id, user_id_cd, username_lb, display_name_lb, first_name_lb, last_name_lb, is_active_fl, external_id_cd, primary_email_lb, sys_create_dt, sys_update_dt)
+VALUES (src.user_id, src.account_id, src.user_id_cd, src.username_lb, src.display_name_lb, src.first_name_lb, src.last_name_lb, src.is_active_fl, src.external_id_cd, src.primary_email_lb, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_service_principal
+-- Current state of all workspace service principals. One row per SP (SCD1 — latest state only).
+-- Sourced from databricks.sal_service_principals, loaded from the Databricks SCIM API.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_service_principal (
+  sp_id             BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id        STRING    NOT NULL COMMENT 'Databricks account identifier',
+  sp_id_cd          STRING    NOT NULL COMMENT 'Databricks internal service principal identifier (source: SCIM id)',
+  application_id_cd STRING             COMMENT 'UUID of the Azure AD / Databricks application (source: SCIM applicationId)',
+  display_name_lb   STRING             COMMENT 'Display name of the service principal (source: SCIM displayName)',
+  is_active_fl      INT       NOT NULL COMMENT '1 = active service principal, 0 = deactivated (source: SCIM active)',
+  external_id_cd    STRING             COMMENT 'External identity provider identifier (source: SCIM externalId)',
+  -- Audit
+  sys_create_dt     TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt     TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Current state of all workspace service principals. One row per SP, sourced from Databricks SCIM API.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_service_principal — default rows
+MERGE INTO global_it_hub.td_service_principal AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'Unassigned', 0, 'UNS'),
+    (-1, 'UNK', 'UNK', 'UNK', 'Unknown',    0, 'UNK')
+  AS src(sp_id, account_id, sp_id_cd, application_id_cd, display_name_lb, is_active_fl, external_id_cd)
+) ON tgt.sp_id = src.sp_id
+WHEN NOT MATCHED THEN INSERT (sp_id, account_id, sp_id_cd, application_id_cd, display_name_lb, is_active_fl, external_id_cd, sys_create_dt, sys_update_dt)
+VALUES (src.sp_id, src.account_id, src.sp_id_cd, src.application_id_cd, src.display_name_lb, src.is_active_fl, src.external_id_cd, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_identity
+-- Unified identity dimension: one row per user or service principal.
+-- Combines td_user and td_service_principal into a single queryable surface.
+-- Sentinel rows (identity_id < 0) are managed here independently of the source tables.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_identity (
+  identity_id       BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id        STRING    NOT NULL COMMENT 'Databricks account identifier',
+  identity_type_lb  STRING    NOT NULL COMMENT 'Identity category: USER or SERVICE PRINCIPAL',
+  source_id_cd      STRING    NOT NULL COMMENT 'Natural key from source — user_id_cd or sp_id_cd',
+  display_name_lb   STRING             COMMENT 'Display name (both identity types)',
+  identity_id_cd    STRING             COMMENT 'Natural login identifier — username for users, application (client) ID for service principals. Joins billing usage run_as_cd.',
+  first_name_lb     STRING             COMMENT 'First name — users only, NULL for service principals',
+  last_name_lb      STRING             COMMENT 'Last name — users only, NULL for service principals',
+  primary_email_lb  STRING             COMMENT 'Primary email — users only, NULL for service principals',
+  is_active_fl      INT       NOT NULL COMMENT '1 = active, 0 = deactivated',
+  external_id_cd    STRING             COMMENT 'External identity provider identifier',
+  -- Audit
+  sys_create_dt     TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt     TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Unified identity dimension combining workspace users and service principals. One row per identity.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_identity — default rows
+MERGE INTO global_it_hub.td_identity AS tgt
+USING (
+  VALUES
+    (-2, 'Z_UNS', 'Z_UNS', 'Z_UNS', 'Unassigned Identity', 'Z_UNS', 'Z_UNS', 'Z_UNS', 'Z_UNS', 0, 'Z_UNS'),
+    (-1, 'Z_UNK', 'Z_UNK', 'Z_UNK', 'Unknown Identity',    'Z_UNK', 'Z_UNK', 'Z_UNK', 'Z_UNK', 0, 'Z_UNK')
+  AS src(identity_id, account_id, identity_type_lb, source_id_cd, display_name_lb, identity_id_cd, first_name_lb, last_name_lb, primary_email_lb, is_active_fl, external_id_cd)
+) ON tgt.identity_id = src.identity_id
+WHEN NOT MATCHED THEN INSERT (identity_id, account_id, identity_type_lb, source_id_cd, display_name_lb, identity_id_cd, first_name_lb, last_name_lb, primary_email_lb, is_active_fl, external_id_cd, sys_create_dt, sys_update_dt)
+VALUES (src.identity_id, src.account_id, src.identity_type_lb, src.source_id_cd, src.display_name_lb, src.identity_id_cd, src.first_name_lb, src.last_name_lb, src.primary_email_lb, src.is_active_fl, src.external_id_cd, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,tf_billing_usage
+-- Silver fact table of Databricks billable usage. Cluster by ingestion_date for efficient
+-- DELETE + INSERT loads. All record_type values (ORIGINAL, RETRACTION, RESTATEMENT) are preserved.
+CREATE TABLE IF NOT EXISTS global_it_hub.tf_billing_usage (
+  record_id_cd        STRING              NOT NULL COMMENT 'Unique billing record identifier (source: record_id)',
+  account_id          STRING              NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd     STRING              NOT NULL COMMENT 'Databricks workspace identifier',
+  record_type_lb      STRING              NOT NULL COMMENT 'Record category: ORIGINAL, RETRACTION, or RESTATEMENT (source: record_type)',
+  ingestion_date      DATE                NOT NULL COMMENT 'Date when the record was published to the system table — partition key',
+  usage_date          DATE                NOT NULL COMMENT 'Date when the usage occurred (source: usage_date)',
+  usage_start_dt      TIMESTAMP                    COMMENT 'Start timestamp of the usage period (source: usage_start_time)',
+  usage_end_dt        TIMESTAMP                    COMMENT 'End timestamp of the usage period (source: usage_end_time)',
+  product_lb          STRING                       COMMENT 'Billing origin product: JOBS, DLT, SQL, etc. (source: billing_origin_product)',
+  usage_type_lb       STRING                       COMMENT 'Usage category: COMPUTE_TIME, STORAGE_SPACE, etc. (source: usage_type)',
+  sku_name_lb         STRING                       COMMENT 'SKU name (source: sku_name)',
+  cloud_lb            STRING                       COMMENT 'Cloud provider: AWS, AZURE, or GCP (source: cloud)',
+  usage_unit_lb       STRING                       COMMENT 'Unit of measurement, e.g. DBU (source: usage_unit)',
+  usage_quantity_nb   DOUBLE                       COMMENT 'Amount of units consumed (source: usage_quantity)',
+  custom_tags         MAP<STRING, STRING>           COMMENT 'User-defined tags on the resource that generated the usage (source: custom_tags)',
+  -- usage_metadata is intentionally omitted: DLT manages this table and stores the full
+  -- system.billing.usage.usage_metadata struct without field restriction.
+  -- Derived from identity_metadata — kept as computed columns because they encode business logic
+  -- (COALESCE priority order) required by the identity dimension join.
+  run_as_cd           STRING                       COMMENT 'First non-null identity across run_as, run_by, created_by, owned_by (source: identity_metadata)',
+  identity_origin_lb  STRING                       COMMENT 'Source field that produced run_as_cd: run_as | run_by | created_by | owned_by',
+  -- Flattened from product_features struct
+  jobs_tier_lb        STRING                       COMMENT 'Jobs tier: CLASSIC or SERVERLESS (source: product_features.jobs_tier)',
+  is_serverless_fl    INT                          COMMENT '1 = serverless compute, 0 = classic (source: product_features.is_serverless)',
+  is_photon_fl        INT                          COMMENT '1 = Photon engine enabled (source: product_features.is_photon)',
+  -- Audit
+  sys_load_dt         TIMESTAMP           NOT NULL COMMENT 'When this batch was loaded by the pipeline'
+)
+USING DELTA
+CLUSTER BY (ingestion_date)
+COMMENT 'Silver fact table of Databricks billable usage. One row per source record, cluster by ingestion_date.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_list_price
+-- Silver dimension for system.billing.list_prices.
+-- One row per (account_id, sku_name, cloud, currency_code, price_start_dt).
+-- Source already carries validity windows (price_start_dt / price_end_dt); no SCD2 computation needed.
+-- Clustered on (sku_name_lb, cloud_lb) to match the join pattern in silver_billing_cost.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_billing_list_price (
+  account_id              STRING    NOT NULL COMMENT 'Databricks account identifier',
+  sku_name_lb             STRING    NOT NULL COMMENT 'SKU name (source: sku_name)',
+  cloud_lb                STRING    NOT NULL COMMENT 'Cloud provider: AWS, AZURE, or GCP (source: cloud)',
+  currency_code_lb        STRING    NOT NULL COMMENT 'Currency code (source: currency_code)',
+  usage_unit_lb           STRING             COMMENT 'Unit of measurement (source: usage_unit)',
+  default_price_nb        DOUBLE             COMMENT 'Base list price per unit (source: pricing.default)',
+  effective_list_price_nb DOUBLE             COMMENT 'Effective list price per unit — preferred for cost calculations (source: pricing.effective_list.default)',
+  price_start_dt          TIMESTAMP NOT NULL COMMENT 'When this price became effective (source: price_start_time)',
+  price_end_dt            TIMESTAMP          COMMENT 'When this price ceased to be effective; NULL if still current (source: price_end_time)',
+  sys_create_dt           TIMESTAMP NOT NULL COMMENT 'When this row was first inserted',
+  sys_update_dt           TIMESTAMP NOT NULL COMMENT 'When this row was last updated'
+)
+USING DELTA
+CLUSTER BY (sku_name_lb, cloud_lb)
+COMMENT 'Silver dimension for system.billing.list_prices. Historical pricing by SKU, cloud, and currency.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_resource
+-- Unified resource dimension: one row per (account_id, workspace_id_cd, source_id_cd, resource_type_lb).
+-- Unions jobs, warehouses, pipelines, apps, notebooks, and endpoints into a single queryable surface.
+-- Mirrors td_identity for compute/workload entities.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_resource (
+  resource_id      BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  resource_type_lb STRING    NOT NULL COMMENT 'Resource category: JOB, WAREHOUSE, PIPELINE, APP, NOTEBOOK, or ENDPOINT',
+  source_id_cd     STRING    NOT NULL COMMENT 'Natural key from source dimension (job_id_cd, warehouse_id_cd, etc.)',
+  account_id       STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd  STRING    NOT NULL COMMENT 'Databricks workspace identifier',
+  display_name_lb  STRING             COMMENT 'Best available display name or path for the resource',
+  owned_by_cd      STRING             COMMENT 'Creator or owner identity where available, NULL otherwise',
+  is_active_fl     INT       NOT NULL COMMENT '1 = active resource, 0 = deleted (derived from is_deleted_fl for SCD2 tables)',
+  -- Audit
+  sys_create_dt    TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt    TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Unified resource dimension combining jobs, warehouses, pipelines, apps, notebooks, and endpoints.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_resource — default rows
+MERGE INTO global_it_hub.td_resource AS tgt
+USING (
+  VALUES
+    -- Per-type unknown sentinels: one row per resource_type_lb handled by v_resource_union
+    (-10, 'NETWORKING', 'Z_UNKNOWN_NETWORKING', 'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Networking', 'Z_UNKNOWN', 0),
+    (-9,  'ENDPOINT',   'Z_UNKNOWN_ENDPOINT',   'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Endpoint',   'Z_UNKNOWN', 0),
+    (-8,  'NOTEBOOK',   'Z_UNKNOWN_NOTEBOOK',   'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Notebook',   'Z_UNKNOWN', 0),
+    (-7,  'APP',        'Z_UNKNOWN_APP',        'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown App',        'Z_UNKNOWN', 0),
+    (-6,  'WAREHOUSE',  'Z_UNKNOWN_WAREHOUSE',  'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Warehouse',  'Z_UNKNOWN', 0),
+    (-5,  'CLUSTER',    'Z_UNKNOWN_CLUSTER',    'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Cluster',    'Z_UNKNOWN', 0),
+    (-4,  'PIPELINE',   'Z_UNKNOWN_PIPELINE',   'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Pipeline',   'Z_UNKNOWN', 0),
+    (-3,  'JOB',        'Z_UNKNOWN_JOB',        'Z_UNKNOWN', 'Z_UNKNOWN', 'Unknown Job',        'Z_UNKNOWN', 0),
+    -- Generic cross-type sentinels
+    (-2,  'Z_OTHER',    'Z_UNDEFINED', 'Z_UNDEFINED', 'UND',  'Unassigned', 'Z_UNDEFINED', 0),
+    (-1,  'Z_OTHER',    'Z_UNKNOWN',   'Z_UNKNOWN',   'UNK',  'Unknown',    'Z_UNKNOWN',   0),
+    (0,   'Z_OTHER',    'Z_OTHER',     'Z_OTHER',     'OTH',  'Other',      'Z_OTHER',     0)
+  AS src(resource_id, resource_type_lb, source_id_cd, account_id, workspace_id_cd, display_name_lb, owned_by_cd, is_active_fl)
+) ON tgt.resource_id = src.resource_id
+WHEN NOT MATCHED THEN INSERT (resource_id, resource_type_lb, source_id_cd, account_id, workspace_id_cd, display_name_lb, owned_by_cd, is_active_fl, sys_create_dt, sys_update_dt)
+VALUES (src.resource_id, src.resource_type_lb, src.source_id_cd, src.account_id, src.workspace_id_cd, src.display_name_lb, src.owned_by_cd, src.is_active_fl, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_app
+-- App dimension: one row per (account_id, workspace_id_cd, app_id_cd, product_lb), SCD1.
+-- Sourced from system.billing.usage via silver_billing_usage — not loaded independently.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_billing_app (
+  app_id           BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id       STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd  STRING    NOT NULL COMMENT 'Databricks workspace identifier',
+  app_id_cd        STRING    NOT NULL COMMENT 'App identifier from billing usage (source: usage_metadata.app_id)',
+  product_lb       STRING    NOT NULL COMMENT 'Billing origin product that generated the usage (source: billing_origin_product)',
+  app_name_lb      STRING             COMMENT 'App display name (source: usage_metadata.app_name)',
+  owned_by_cd      STRING             COMMENT 'Identity that created the app (source: identity_metadata.created_by)',
+  tags             MAP<STRING, STRING> COMMENT 'App tags as key/value pairs (source: custom_tags)',
+  -- Audit
+  sys_create_dt    TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt    TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'App dimension sourced from Databricks billing usage. One row per app × product per workspace.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_app — default rows
+MERGE INTO global_it_hub.td_billing_app AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'UNS', 'Unassigned', 'UNS', CAST(NULL AS MAP<STRING, STRING>)),
+    (-1, 'UNK', 'UNK', 'UNK', 'UNK', 'Unknown',    'UNK', CAST(NULL AS MAP<STRING, STRING>))
+  AS src(app_id, account_id, workspace_id_cd, app_id_cd, product_lb, app_name_lb, owned_by_cd, tags)
+) ON tgt.app_id = src.app_id
+WHEN NOT MATCHED THEN INSERT (app_id, account_id, workspace_id_cd, app_id_cd, product_lb, app_name_lb, owned_by_cd, tags, sys_create_dt, sys_update_dt)
+VALUES (src.app_id, src.account_id, src.workspace_id_cd, src.app_id_cd, src.product_lb, src.app_name_lb, src.owned_by_cd, src.tags, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_notebook
+-- Notebook dimension: one row per (account_id, workspace_id_cd, notebook_id_cd, product_lb), SCD1.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_billing_notebook (
+  notebook_id      BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id       STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd  STRING    NOT NULL COMMENT 'Databricks workspace identifier',
+  notebook_id_cd   STRING    NOT NULL COMMENT 'Notebook identifier (source: usage_metadata.notebook_id)',
+  product_lb       STRING    NOT NULL COMMENT 'Billing origin product that generated the usage (source: billing_origin_product)',
+  notebook_path_lb STRING             COMMENT 'Notebook path at time of last observation (source: usage_metadata.notebook_path)',
+  tags             MAP<STRING, STRING> COMMENT 'Notebook tags as key/value pairs (source: custom_tags)',
+  -- Audit
+  sys_create_dt    TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt    TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Notebook dimension sourced from Databricks billing usage. One row per notebook × product per workspace.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_notebook — default rows
+MERGE INTO global_it_hub.td_billing_notebook AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'UNS', 'Unassigned', CAST(NULL AS MAP<STRING, STRING>)),
+    (-1, 'UNK', 'UNK', 'UNK', 'UNK', 'Unknown',    CAST(NULL AS MAP<STRING, STRING>))
+  AS src(notebook_id, account_id, workspace_id_cd, notebook_id_cd, product_lb, notebook_path_lb, tags)
+) ON tgt.notebook_id = src.notebook_id
+WHEN NOT MATCHED THEN INSERT (notebook_id, account_id, workspace_id_cd, notebook_id_cd, product_lb, notebook_path_lb, tags, sys_create_dt, sys_update_dt)
+VALUES (src.notebook_id, src.account_id, src.workspace_id_cd, src.notebook_id_cd, src.product_lb, src.notebook_path_lb, src.tags, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_endpoint
+-- Endpoint dimension: one row per (account_id, workspace_id_cd, endpoint_id_cd, product_lb), SCD1.
+CREATE TABLE IF NOT EXISTS global_it_hub.td_billing_endpoint (
+  endpoint_id      BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id       STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd  STRING    NOT NULL COMMENT 'Databricks workspace identifier',
+  endpoint_id_cd   STRING    NOT NULL COMMENT 'Serving endpoint identifier (source: usage_metadata.endpoint_id)',
+  product_lb       STRING    NOT NULL COMMENT 'Billing origin product that generated the usage (source: billing_origin_product)',
+  endpoint_name_lb STRING             COMMENT 'Serving endpoint name (source: usage_metadata.endpoint_name)',
+  tags             MAP<STRING, STRING> COMMENT 'Endpoint tags as key/value pairs (source: custom_tags)',
+  -- Audit
+  sys_create_dt    TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt    TIMESTAMP NOT NULL COMMENT 'When this row was last written by the pipeline'
+)
+USING DELTA
+COMMENT 'Serving endpoint dimension sourced from Databricks billing usage. One row per endpoint × product per workspace.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_endpoint — default rows
+MERGE INTO global_it_hub.td_billing_endpoint AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'UNS', 'Unassigned', CAST(NULL AS MAP<STRING, STRING>)),
+    (-1, 'UNK', 'UNK', 'UNK', 'UNK', 'Unknown',    CAST(NULL AS MAP<STRING, STRING>))
+  AS src(endpoint_id, account_id, workspace_id_cd, endpoint_id_cd, product_lb, endpoint_name_lb, tags)
+) ON tgt.endpoint_id = src.endpoint_id
+WHEN NOT MATCHED THEN INSERT (endpoint_id, account_id, workspace_id_cd, endpoint_id_cd, product_lb, endpoint_name_lb, tags, sys_create_dt, sys_update_dt)
+VALUES (src.endpoint_id, src.account_id, src.workspace_id_cd, src.endpoint_id_cd, src.product_lb, src.endpoint_name_lb, src.tags, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_network
+-- Network client dimension: one row per (account_id, workspace_id_cd, network_client_lb), SCD1.
+-- Sourced from system.billing.usage via silver_billing_usage — billing_origin_product = 'NETWORKING'.
+-- networking_client serves as both natural key and display label (no separate name field in source).
+CREATE TABLE IF NOT EXISTS global_it_hub.td_billing_network (
+  network_id        BIGINT    GENERATED BY DEFAULT AS IDENTITY (START WITH 1 INCREMENT BY 1) COMMENT 'Surrogate key — auto-assigned integer for Power BI relationships',
+  account_id        STRING    NOT NULL COMMENT 'Databricks account identifier',
+  workspace_id_cd   STRING    NOT NULL COMMENT 'Databricks workspace identifier',
+  network_client_lb STRING    NOT NULL COMMENT 'Network client identifier and display name (source: usage_metadata.networking_client)',
+  product_lb        STRING             COMMENT 'Billing origin product — always NETWORKING',
+  tags              MAP<STRING, STRING> COMMENT 'Networking tags as key/value pairs (source: custom_tags)',
+  sys_create_dt     TIMESTAMP NOT NULL COMMENT 'When this row was first inserted by the pipeline',
+  sys_update_dt     TIMESTAMP NOT NULL COMMENT 'When this row was last updated by the pipeline'
+)
+USING DELTA
+CLUSTER BY (account_id, workspace_id_cd)
+COMMENT 'Network client dimension — one row per (account_id, workspace_id_cd, network_client_lb). SCD1.'
+TBLPROPERTIES ('quality' = 'silver');
+
+-- COMMAND ----------
+
+-- DBTITLE 1,td_billing_network — default rows
+MERGE INTO global_it_hub.td_billing_network AS tgt
+USING (
+  VALUES
+    (-2, 'UNS', 'UNS', 'UNS', 'Unassigned', CAST(NULL AS MAP<STRING, STRING>)),
+    (-1, 'UNK', 'UNK', 'UNK', 'Unknown',    CAST(NULL AS MAP<STRING, STRING>))
+  AS src(network_id, account_id, workspace_id_cd, network_client_lb, product_lb, tags)
+) ON tgt.network_id = src.network_id
+WHEN NOT MATCHED THEN INSERT (network_id, account_id, workspace_id_cd, network_client_lb, product_lb, tags, sys_create_dt, sys_update_dt)
+VALUES (src.network_id, src.account_id, src.workspace_id_cd, src.network_client_lb, src.product_lb, src.tags, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());

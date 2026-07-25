@@ -1,0 +1,476 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 35.384615384615387,
+        "y": 0
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 697.15707512307381,
+            "y": 427.5783342855616
+          },
+          "nodeIndex": "Costs",
+          "nodeLineageTag": "fa4b945c-4a19-4142-bf8e-140ed9c5e5e5",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 15
+        },
+        {
+          "location": {
+            "x": 683.86347054881969,
+            "y": 4.0927438900978359
+          },
+          "nodeIndex": "Identity",
+          "nodeLineageTag": "73d08abf-794e-484e-8cf0-17b815477e89",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 1678.9557064011351,
+            "y": 400.72361255294209
+          },
+          "nodeIndex": "KPIs",
+          "nodeLineageTag": "556a4cbd-83f6-4f80-a567-53579a8880c0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 10
+        },
+        {
+          "location": {
+            "x": 606.7901546801229,
+            "y": 779.44722510588417
+          },
+          "nodeIndex": "Resource",
+          "nodeLineageTag": "ce3b673a-5779-43db-bd7e-9e1feed675e6",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 11
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 706.52751233404751
+          },
+          "nodeIndex": "Tag",
+          "nodeLineageTag": "a29192a1-c750-4827-be1b-a3b94dde12c1",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 12
+        },
+        {
+          "location": {
+            "x": 1438.8018602472889,
+            "y": 627.3726022854629
+          },
+          "nodeIndex": "Calendar",
+          "nodeLineageTag": "f1de91d0-d693-42be-a743-cfdc01d80b26",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 1337.936061006674,
+            "y": 0
+          },
+          "nodeIndex": "Workspace",
+          "nodeLineageTag": "ee7d5911-bc70-4e5c-8c20-63a842420b1c",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 337.08066956663652,
+            "y": 575.55122193522629
+          },
+          "nodeIndex": "ResourceTag",
+          "nodeLineageTag": "caae3f50-82f8-4f30-90c7-f56dabf47be9",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 1962.9557064011351,
+            "y": 486.72361255294209
+          },
+          "nodeIndex": "TimeCalculation",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 13
+        },
+        {
+          "location": {
+            "x": 2246.9557064011351,
+            "y": 486.72361255294209
+          },
+          "nodeIndex": "TimeCalculationPriorPeriod",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 14
+        },
+        {
+          "location": {
+            "x": 2530.9557064011351,
+            "y": 400.72361255294209
+          },
+          "nodeIndex": "OneidUser",
+          "nodeLineageTag": "b7760b53-4623-4075-93d6-7579b48a8451",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 252.76732271421838,
+            "y": 228.10512861990742
+          },
+          "nodeIndex": "IdentityOwner",
+          "nodeLineageTag": "b3f1a2c4-d5e6-7890-bcde-f01234567890",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 2814.9557064011351,
+            "y": 498.72361255294209
+          },
+          "nodeIndex": "RefreshDate",
+          "nodeLineageTag": "a2581551-3e39-425e-a47b-69ad6273d065",
+          "size": {
+            "height": 104,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 1109.4356042187649,
+            "y": 403.0385152915153
+          },
+          "nodeIndex": "QueryCosts",
+          "nodeLineageTag": "a895089e-9dd5-46aa-b722-0c2414a4dcb9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 3566.9557064011351,
+            "y": 449.72361255294209
+          },
+          "nodeIndex": "Filters",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3332.9557064011351,
+            "y": 449.72361255294209
+          },
+          "nodeIndex": "CostOrUsage",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 3800.9557064011351,
+            "y": 449.72361255294209
+          },
+          "nodeIndex": "Period",
+          "nodeLineageTag": "7cfa090f-7a21-4d5f-9dc6-8557f689e6c2",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 4034.9557064011351,
+            "y": 449.72361255294209
+          },
+          "nodeIndex": "Parameter",
+          "nodeLineageTag": "7e9c120a-0d96-45e8-a213-18011facf875",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 4268.9557064011351,
+            "y": 375.72361255294209
+          },
+          "nodeIndex": "Apps",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "All tables",
+      "zoomValue": 65,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 1,
+      "scrollPosition": {
+        "x": 0,
+        "y": 503
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 334.17335058718822,
+            "y": 299.4299470044586
+          },
+          "nodeIndex": "Costs",
+          "nodeLineageTag": "fa4b945c-4a19-4142-bf8e-140ed9c5e5e5",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 50.027738612501139,
+            "y": 622.66762195604542
+          },
+          "nodeIndex": "Resource",
+          "nodeLineageTag": "ce3b673a-5779-43db-bd7e-9e1feed675e6",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 63.2548054068302
+          },
+          "nodeIndex": "Identity",
+          "nodeLineageTag": "73d08abf-794e-484e-8cf0-17b815477e89",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 618.34322755358539,
+            "y": 540.25859464820451
+          },
+          "nodeIndex": "Workspace",
+          "nodeLineageTag": "ee7d5911-bc70-4e5c-8c20-63a842420b1c",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 618.320622753195,
+            "y": -50
+          },
+          "nodeIndex": "Calendar",
+          "nodeLineageTag": "f1de91d0-d693-42be-a743-cfdc01d80b26",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 262,
+            "y": 894
+          },
+          "nodeIndex": "ResourceTag",
+          "nodeLineageTag": "caae3f50-82f8-4f30-90c7-f56dabf47be9",
+          "size": {
+            "height": 152,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 539,
+            "y": 1009
+          },
+          "nodeIndex": "Tag",
+          "nodeLineageTag": "a29192a1-c750-4827-be1b-a3b94dde12c1",
+          "size": {
+            "height": 128,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 887,
+            "y": 978
+          },
+          "nodeIndex": "Apps",
+          "nodeLineageTag": "5055ff65-efe8-4ad4-b627-be3308d011f5",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 962,
+            "y": 640
+          },
+          "nodeIndex": "OneidUser",
+          "nodeLineageTag": "b7760b53-4623-4075-93d6-7579b48a8451",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Layout 1",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    },
+    {
+      "ordinal": 2,
+      "scrollPosition": {
+        "x": 0,
+        "y": 200
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 334.17459780466493,
+            "y": 296.18957118185403
+          },
+          "nodeIndex": "QueryCosts",
+          "nodeLineageTag": "a895089e-9dd5-46aa-b722-0c2414a4dcb9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 73.065067953232415,
+            "y": 646.357874339205
+          },
+          "nodeIndex": "Calendar",
+          "nodeLineageTag": "f1de91d0-d693-42be-a743-cfdc01d80b26",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 74.636003068683067
+          },
+          "nodeIndex": "Identity",
+          "nodeLineageTag": "73d08abf-794e-484e-8cf0-17b815477e89",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 553.101241619048,
+            "y": -50
+          },
+          "nodeIndex": "Workspace",
+          "nodeLineageTag": "ee7d5911-bc70-4e5c-8c20-63a842420b1c",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 618.3676242465275,
+            "y": 501.75676368916379
+          },
+          "nodeIndex": "Resource",
+          "nodeLineageTag": "ce3b673a-5779-43db-bd7e-9e1feed675e6",
+          "size": {
+            "height": 272,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Layout 2",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Layout 1",
+  "defaultDiagram": "All tables"
+}

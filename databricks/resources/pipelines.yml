@@ -1,0 +1,59 @@
+resources:
+  pipelines:
+    # Core silver layer: builds td_lakeflow_job(_history), td_lakeflow_pipeline(_history),
+    # td_compute_cluster(_history), td_compute_warehouse(_history) (silver_dimensions.py);
+    # tf_billing_usage plus td_billing_app/notebook/endpoint/network/data_quality_monitoring
+    # (silver_billing.py); tf_query_history (silver_query_history.py); and tf_serving_usage/
+    # td_serving_entity(_history) (silver_serving.py) — all from system-table bronze. Runs
+    # first — attributed_cost and the notebook-based silver_* tasks (billing cost, identity,
+    # workspace, resource) depend on its output.
+    silver:
+      name: "${var.domain}_${var.data_product}-silver"
+      catalog: ${var.it_catalog_name}_${var.catalog_env}
+      target: ${var.data_product_silver}
+      libraries:
+        - notebook:
+            path: ../src/pipelines/silver/silver_billing.py
+        - notebook:
+            path: ../src/pipelines/silver/silver_dimensions.py
+        - notebook:
+            path: ../src/pipelines/silver/silver_query_history.py
+        - notebook:
+            path: ../src/pipelines/silver/silver_serving.py
+      schema: ${var.data_product_silver}
+      serverless: true
+      continuous: false
+      photon: false
+      channel: CURRENT
+      configuration:
+        pipeline.catalog_name: ${var.it_catalog_name}
+        pipeline.catalog_env: ${var.catalog_env}
+        pipeline.schema_bronze: ${var.data_product_bronze}
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # Owns mvf_query_cost_attribution and mvf_serving_cost_attribution. Separate from the
+    # silver pipeline because both MVs must refresh AFTER silver_billing_cost.sql (the silver
+    # pipeline runs before it) — the master job triggers this pipeline as its last task.
+    # Sources share src/pipelines/silver with the silver pipeline; each pipeline lists its
+    # files explicitly — add new source files to the right pipeline's libraries list.
+    attributed_cost:
+      name: "${var.domain}_${var.data_product}-attributed-cost"
+      catalog: ${var.it_catalog_name}_${var.catalog_env}
+      target: ${var.data_product_silver}
+      libraries:
+        - notebook:
+            path: ../src/pipelines/silver/silver_query_cost_attribution.sql
+        - notebook:
+            path: ../src/pipelines/silver/silver_serving_cost_attribution.sql
+      schema: ${var.data_product_silver}
+      serverless: true
+      continuous: false
+      photon: false
+      channel: CURRENT
+      configuration:
+        pipeline.catalog_name: ${var.it_catalog_name}
+        pipeline.catalog_env: ${var.catalog_env}
+        pipeline.schema_bronze: ${var.data_product_bronze}
+      tags:
+        dataproduct_type: "consumer-aligned"

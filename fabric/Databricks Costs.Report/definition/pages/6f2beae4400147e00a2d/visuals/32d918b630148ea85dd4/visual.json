@@ -1,0 +1,228 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+  "name": "32d918b630148ea85dd4",
+  "position": {
+    "x": 0.69191805718378419,
+    "y": 486.46751184006507,
+    "z": 2000,
+    "height": 420.97447795823666,
+    "width": 1490.1160092807424,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Resource Name"
+                }
+              },
+              "queryRef": "Resource.Resource Name",
+              "nativeQueryRef": "Resource Name",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Resource Type"
+                }
+              },
+              "queryRef": "Resource.Resource Type",
+              "nativeQueryRef": "Resource Type",
+              "active": true
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Total Cost (USD)"
+                }
+              },
+              "queryRef": "KPIs.Total Cost (USD)",
+              "nativeQueryRef": "Total Cost (USD)",
+              "active": true,
+              "displayName": "Total Cost (USD)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "% of Total"
+                }
+              },
+              "queryRef": "KPIs.% of Total",
+              "nativeQueryRef": "% of Total",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Owned By"
+                }
+              },
+              "queryRef": "Resource.Owned By",
+              "nativeQueryRef": "Owned By",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Resource"
+                    }
+                  },
+                  "Property": "Is Active"
+                }
+              },
+              "queryRef": "Resource.Is Active",
+              "nativeQueryRef": "Is Active",
+              "active": true
+            }
+          ],
+          "fieldParameters": [
+            {
+              "parameterExpr": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "CostOrUsage"
+                    }
+                  },
+                  "Property": "CostOrUsage"
+                }
+              },
+              "index": 2,
+              "length": 1,
+              "sortDirection": "Descending"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "KPIs"
+                  }
+                },
+                "Property": "Total Cost (USD)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "general": [
+        {
+          "properties": {}
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "defaultColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "90D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "513.7841281916833D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "Resource.Resource Name"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Resource Detail'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "keepLayerOrder": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "parentGroupName": "f8d5286b9200098d73a2"
+}

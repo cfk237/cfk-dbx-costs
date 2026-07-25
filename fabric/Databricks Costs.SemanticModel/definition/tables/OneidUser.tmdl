@@ -1,0 +1,146 @@
+/// Corporate identity directory sourced from the OneID system, providing employee demographic, organisational, and job attributes. Used to enrich Databricks identity-level cost attribution with HR context such as job profile, division, and business unit.
+table OneidUser
+	lineageTag: b7760b53-4623-4075-93d6-7579b48a8451
+
+	/// Unique identifier for the user in the OneID corporate identity system. Primary key of this table.
+	column 'Identity ID'
+		dataType: string
+		lineageTag: 2d089d16-d789-4814-937f-7efec66074d0
+		summarizeBy: none
+		sourceColumn: IDENTITY
+
+		annotation SummarizationSetBy = Automatic
+
+	/// User's family name as registered in the corporate directory.
+	column 'Last Name'
+		dataType: string
+		lineageTag: ed3625c3-c98c-4b58-8cf1-5650ca517c15
+		summarizeBy: none
+		sourceColumn: LAST_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	/// User's given name as registered in the corporate directory.
+	column 'First Name'
+		dataType: string
+		lineageTag: 17edb35a-e607-4701-b5f6-ec6bcebf8786
+		summarizeBy: none
+		sourceColumn: FIRST_NAME
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity ID of the user's direct line manager.
+	column Manager
+		dataType: string
+		lineageTag: 4e4989fa-2e42-42a1-a823-c2be2ab02972
+		summarizeBy: none
+		sourceColumn: MANAGER
+
+		annotation SummarizationSetBy = Automatic
+
+	/// TRUE when the user's corporate account is currently active; FALSE when the account has been deactivated or the employee has left.
+	column 'Is Active'
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 07858636-f67c-47b1-a6f1-cfabdd5848a4
+		summarizeBy: none
+		sourceColumn: ACTIVE
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Corporate email address of the user.
+	column Email
+		dataType: string
+		lineageTag: 4f708c17-c466-432d-aa8a-c6dc69ed1b39
+		summarizeBy: none
+		sourceColumn: EMAIL
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Official job title of the user as defined in HR.
+	column 'Job Title'
+		dataType: string
+		lineageTag: d05b2cf2-b0f4-4437-aade-c212badf03b4
+		summarizeBy: none
+		sourceColumn: JOB_TITLE
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Job profile classification used by HR to group similar roles.
+	column 'Job Profile'
+		dataType: string
+		lineageTag: c6c36f53-3384-406a-a2ba-e3e97b3d8753
+		summarizeBy: none
+		sourceColumn: JOB_PROFILE
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Broader grouping of job profiles into functional families, e.g. Engineering, Finance.
+	column 'Job Family Group'
+		dataType: string
+		lineageTag: 79ab693e-297d-4113-a90e-eae5db838cb8
+		summarizeBy: none
+		sourceColumn: JOB_FAMILY_GROUP
+
+		annotation SummarizationSetBy = Automatic
+
+	/// HR division the user belongs to, used for workforce reporting and cost allocation.
+	column 'HR Division'
+		dataType: string
+		lineageTag: 87881d32-fc91-498b-8e4b-5986c478d418
+		summarizeBy: none
+		sourceColumn: HR_DIVISION
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Business unit within the HR structure the user is assigned to.
+	column 'HR Business Unit'
+		dataType: string
+		lineageTag: 0d72f12d-5084-493d-b12c-8e5759945421
+		summarizeBy: none
+		sourceColumn: HR_BUSINESS_UNIT
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity ID of the user's functional manager, which may differ from the direct line manager in matrix organisations.
+	column 'Functional Manager'
+		dataType: string
+		lineageTag: d29cdcab-c7e5-4c6a-98a4-3b060a938b5c
+		summarizeBy: none
+		sourceColumn: FUNCTIONAL_MANAGER
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Finance division associated with the user, used for cost centre attribution.
+	column 'Finance Division'
+		dataType: string
+		lineageTag: a6a81758-e4a3-462c-8702-c937a392e800
+		summarizeBy: none
+		sourceColumn: FINANCE_DIVISION
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Country where the user is based, as registered in the corporate directory.
+	column Country
+		dataType: string
+		lineageTag: 1b56abf2-1386-4eaa-9293-f308c82144ca
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: COUNTRY
+
+		annotation SummarizationSetBy = Automatic
+
+	partition OneidUser = m
+		mode: import
+		source =
+				let
+				    Source = _CatalogOneid,
+				    sal_oneid_users_Table = Source{[Name="sal_oneid_users",Kind="Table"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(sal_oneid_users_Table,{"IDENTITY", "LAST_NAME", "FIRST_NAME", "MANAGER", "ACTIVE", "EMAIL", "JOB_TITLE", "JOB_PROFILE", "JOB_FAMILY_GROUP", "HR_DIVISION", "HR_BUSINESS_UNIT", "FUNCTIONAL_MANAGER", "FINANCE_DIVISION", "COUNTRY"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

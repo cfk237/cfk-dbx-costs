@@ -1,0 +1,148 @@
+# Composite action: run-cicd
+#
+# Purpose:
+#   Sets up Python + fabric-cicd, then executes deploy-to-fabric.py to
+#   provision or update Fabric items in the target workspace.
+#
+# Design:
+#   Steps run in order:
+#     1. Check parameter.yml — skips all remaining steps if absent or empty.
+#     2. Set up Python at the requested version.
+#     3. Install fabric-cicd (latest or pinned).
+#     4. Run deploy-to-fabric.py — validate-only or full deploy depending on inputs.
+#   FABRIC_TOKEN is injected via environment variable so it is never echoed to logs.
+#
+# Inputs (Python setup):
+#   python-version        : Python version to install. Default: "3.12".
+#   fabric-cicd-version   : Pinned version (used when use-latest is "false").
+#   use-latest            : When "true", install the latest published release. Default: "true".
+#
+# Inputs (deployment):
+#   fabric-env            : Target Fabric environment (DEV, UAT, PRD).
+#   workspace-name        : Target Fabric workspace name.
+#   root-directory        : Repository root. Defaults to $GITHUB_WORKSPACE when empty.
+#   repository-directory  : Path to the folder containing Fabric item definitions.
+#   items-type            : JSON array of Fabric item types to deploy.
+#   fabric-token          : Bearer token for the Fabric API (required when validate-only is "false").
+#   deploy-items          : When "true", pass --deploy_items to the script. Default: "false".
+#   validate-only         : When "true", run --validate_deployment only. Default: "false".
+
+name: Run fabric-cicd deployment
+description: >
+  Sets up Python + fabric-cicd and runs deploy-to-fabric.py to provision or
+  update Fabric items in the target workspace. Skips automatically when
+  parameter.yml is absent or contains no meaningful content.
+
+inputs:
+  python-version:
+    description: Python version to install
+    required: false
+    default: "3.12"
+  fabric-cicd-version:
+    description: Pinned fabric-cicd version (used when use-latest is "false")
+    required: false
+    default: ""
+  use-latest:
+    description: When "true", install the latest published fabric-cicd release
+    required: false
+    default: "true"
+  fabric-env:
+    description: Target Fabric environment (e.g. DEV, UAT, PROD)
+    required: true
+  workspace-name:
+    description: Target Fabric workspace name
+    required: true
+  root-directory:
+    description: Repository root directory (defaults to $GITHUB_WORKSPACE when empty)
+    required: false
+    default: ""
+  repository-directory:
+    description: Git folder containing Fabric item definitions
+    required: true
+  items-type:
+    description: JSON array of Fabric item types to deploy
+    required: true
+  fabric-token:
+    description: Bearer token for the Fabric API (required when validate-only is "false")
+    required: false
+    default: ""
+  deploy-items:
+    description: When "true", pass --deploy_items flag to the script
+    required: false
+    default: "false"
+  validate-only:
+    description: When "true", run --validate_deployment instead of deploying
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Check parameter.yml
+      id: check-param
+      if: inputs.validate-only == 'true'
+      shell: bash
+      env:
+        REPOSITORY_DIR: ${{ inputs.repository-directory }}
+      run: |
+        PARAM_FILE="$GITHUB_WORKSPACE/$REPOSITORY_DIR/parameter.yml"
+        if [ ! -f "$PARAM_FILE" ] || [ -z "$(grep -v '^\s*#' "$PARAM_FILE" | grep -v '^\s*$')" ]; then
+          echo "parameter.yml has no meaningful content — skipping deployment."
+          echo "skip=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Set up Python ${{ inputs.python-version }}
+      if: steps.check-param.outputs.skip != 'true'
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install fabric-cicd
+      if: steps.check-param.outputs.skip != 'true'
+      shell: bash
+      env:
+        USE_LATEST: ${{ inputs.use-latest }}
+        FABRIC_CICD_VERSION: ${{ inputs.fabric-cicd-version }}
+      run: |
+        python -m pip install --upgrade pip
+        if [ "$USE_LATEST" = "true" ]; then
+          echo "Installing latest fabric-cicd release"
+          pip install fabric-cicd
+        else
+          echo "Installing fabric-cicd==${FABRIC_CICD_VERSION}"
+          pip install "fabric-cicd==${FABRIC_CICD_VERSION}"
+        fi
+
+    - name: Run fabric-cicd (${{ inputs.fabric-env }})
+      if: steps.check-param.outputs.skip != 'true'
+      shell: bash
+      env:
+        FABRIC_TOKEN: ${{ inputs.fabric-token }}
+        ITEMS_TYPE_JSON: ${{ inputs.items-type }}
+        FABRIC_ENV: ${{ inputs.fabric-env }}
+        WORKSPACE_NAME: ${{ inputs.workspace-name }}
+        REPOSITORY_DIR: ${{ inputs.repository-directory }}
+        DEPLOY_ITEMS: ${{ inputs.deploy-items }}
+        VALIDATE_ONLY: ${{ inputs.validate-only }}
+        ROOT_DIR_INPUT: ${{ inputs.root-directory }}
+      run: |
+        ROOT_DIR="${ROOT_DIR_INPUT:-$GITHUB_WORKSPACE}"
+        SCRIPT="$ROOT_DIR/.github/deploy/deploy-to-fabric.py"
+
+        BASE_ARGS=(
+          --environment          "$FABRIC_ENV"
+          --root_directory       "$ROOT_DIR"
+          --repository_directory "$REPOSITORY_DIR"
+          --workspace_name       "$WORKSPACE_NAME"
+          --items_type_in_scope  "$ITEMS_TYPE_JSON"
+        )
+
+        if [ "$VALIDATE_ONLY" = "true" ]; then
+          python -u "$SCRIPT" --validate_deployment "${BASE_ARGS[@]}"
+        else
+          EXTRA_ARGS=()
+          [ "$DEPLOY_ITEMS" = "true" ] && EXTRA_ARGS+=(--deploy_items)
+          python -u "$SCRIPT" --token_from_env "${BASE_ARGS[@]}" "${EXTRA_ARGS[@]}"
+        fi

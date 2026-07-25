@@ -1,0 +1,821 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/bookmark/2.1.0/schema.json",
+  "displayName": "Bookmark 2",
+  "name": "d1d2f59a536e928600ee",
+  "options": {
+    "targetVisualNames": [
+      "5bcc9723caf828c1d62f"
+    ]
+  },
+  "explorationState": {
+    "version": "1.3",
+    "activeSection": "be0b697fc0cd344afe6c",
+    "filters": {
+      "byExpr": [
+        {
+          "name": "3d16231448ac6c80fbbb",
+          "type": "Categorical",
+          "expression": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "Workspace"
+                }
+              },
+              "Property": "Workspace Name"
+            }
+          },
+          "howCreated": 1
+        }
+      ]
+    },
+    "sections": {
+      "be0b697fc0cd344afe6c": {
+        "visualContainers": {
+          "0188ee7ce24315fb41ca": {
+            "singleVisual": {
+              "visualType": "shape",
+              "objects": {}
+            }
+          },
+          "2231dab81c3e6d70506d": {
+            "filters": {
+              "byName": {
+                "ef07a77b681194188487": {
+                  "name": "ef07a77b681194188487",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "aa147ed9cb81d3e6b2b6",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "8eaf6c3aa291562c5ad8",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Identity"
+                        }
+                      },
+                      "Property": "Identity Type"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Identity.Identity Type"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Identity"
+                              }
+                            },
+                            "Property": "Identity Type"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Identity.Identity Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "4a04455fb70133d546a1": {
+            "singleVisual": {
+              "visualType": "shape",
+              "objects": {}
+            }
+          },
+          "755a912e0a8509c1ee6b": {
+            "filters": {
+              "byName": {
+                "bdd58d1ae0062495f607": {
+                  "name": "bdd58d1ae0062495f607",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "c32cda77a1de067a68a0",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Environment"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "9acbe0eb83034a2cfedf",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Workspace Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Workspace"
+                        }
+                      },
+                      "Property": "Environment"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Workspace.Environment"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Workspace"
+                              }
+                            },
+                            "Property": "Environment"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Workspace.Workspace Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "82ad5401da3b1a5a6b0b": {
+            "filters": {
+              "byName": {
+                "d1593a5af6750b4c4e98": {
+                  "name": "d1593a5af6750b4c4e98",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "2ec4b2c31efce7cc3a36",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {
+                "merge": {
+                  "general": [
+                    {
+                      "properties": {
+                        "filter": {
+                          "filter": {
+                            "Version": 2,
+                            "From": [
+                              {
+                                "Name": "c",
+                                "Entity": "Calendar",
+                                "Type": 0
+                              }
+                            ],
+                            "Where": [
+                              {
+                                "Condition": {
+                                  "Between": {
+                                    "Expression": {
+                                      "Column": {
+                                        "Expression": {
+                                          "SourceRef": {
+                                            "Source": "c"
+                                          }
+                                        },
+                                        "Property": "Date"
+                                      }
+                                    },
+                                    "LowerBound": {
+                                      "DateSpan": {
+                                        "Expression": {
+                                          "DateAdd": {
+                                            "Expression": {
+                                              "DateAdd": {
+                                                "Expression": {
+                                                  "ScopedEval": {
+                                                    "Expression": {
+                                                      "Aggregation": {
+                                                        "Expression": {
+                                                          "Column": {
+                                                            "Expression": {
+                                                              "SourceRef": {
+                                                                "Source": "c"
+                                                              }
+                                                            },
+                                                            "Property": "Date"
+                                                          }
+                                                        },
+                                                        "Function": 4
+                                                      }
+                                                    },
+                                                    "Scope": []
+                                                  }
+                                                },
+                                                "Amount": 1,
+                                                "TimeUnit": 0
+                                              }
+                                            },
+                                            "Amount": -24,
+                                            "TimeUnit": 2
+                                          }
+                                        },
+                                        "TimeUnit": 0
+                                      }
+                                    },
+                                    "UpperBound": {
+                                      "DateSpan": {
+                                        "Expression": {
+                                          "ScopedEval": {
+                                            "Expression": {
+                                              "Aggregation": {
+                                                "Expression": {
+                                                  "Column": {
+                                                    "Expression": {
+                                                      "SourceRef": {
+                                                        "Source": "c"
+                                                      }
+                                                    },
+                                                    "Property": "Date"
+                                                  }
+                                                },
+                                                "Function": 4
+                                              }
+                                            },
+                                            "Scope": []
+                                          }
+                                        },
+                                        "TimeUnit": 0
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "data": [
+                    {
+                      "properties": {
+                        "mode": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "'RelativeDatePicker'"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "selection": [
+                    {
+                      "properties": {
+                        "strictSingleSelect": {
+                          "expr": {
+                            "Literal": {
+                              "Value": "false"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  }
+                }
+              ],
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Calendar"
+                        }
+                      },
+                      "Property": "Date"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bce2ff30a40629cdbbdb": {
+            "singleVisual": {
+              "visualType": "image",
+              "objects": {}
+            }
+          },
+          "d725ff9e40955cbac463": {
+            "filters": {
+              "byName": {
+                "4025f16b00a839ce7205": {
+                  "name": "4025f16b00a839ce7205",
+                  "type": "Advanced",
+                  "filter": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "k",
+                        "Entity": "KPIs",
+                        "Type": 0
+                      }
+                    ],
+                    "Where": [
+                      {
+                        "Condition": {
+                          "Comparison": {
+                            "ComparisonKind": 0,
+                            "Left": {
+                              "Measure": {
+                                "Expression": {
+                                  "SourceRef": {
+                                    "Source": "k"
+                                  }
+                                },
+                                "Property": "Is Slicer Filtered"
+                              }
+                            },
+                            "Right": {
+                              "Literal": {
+                                "Value": "1L"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Is Slicer Filtered"
+                    }
+                  },
+                  "howCreated": 1
+                }
+              },
+              "byExpr": [
+                {
+                  "name": "f1fb7f5ceb665bee7c29",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  },
+                  "howCreated": 0
+                },
+                {
+                  "name": "8cd2ebe1c493240cac0f",
+                  "type": "Categorical",
+                  "expression": {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Name"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "slicer",
+              "objects": {},
+              "activeProjections": {
+                "Values": [
+                  {
+                    "Column": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Resource"
+                        }
+                      },
+                      "Property": "Resource Type"
+                    }
+                  }
+                ]
+              },
+              "expansionStates": [
+                {
+                  "roles": [
+                    "Values"
+                  ],
+                  "levels": [
+                    {
+                      "queryRefs": [
+                        "Resource.Resource Type"
+                      ],
+                      "isCollapsed": true,
+                      "identityKeys": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Entity": "Resource"
+                              }
+                            },
+                            "Property": "Resource Type"
+                          }
+                        }
+                      ],
+                      "isPinned": true
+                    },
+                    {
+                      "queryRefs": [
+                        "Resource.Resource Name"
+                      ],
+                      "isCollapsed": true,
+                      "isPinned": true
+                    }
+                  ],
+                  "root": {
+                    "identityValues": []
+                  }
+                }
+              ]
+            }
+          },
+          "db65beb059d665362890": {
+            "singleVisual": {
+              "visualType": "textbox",
+              "objects": {}
+            }
+          },
+          "df1cbb20394d80257966": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "660201d0a16ddc75c60c",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Last Refreshed"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "cardVisual",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Last Refreshed"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "f5bb86cc3bcd860b9ba3": {
+            "filters": {
+              "byExpr": [
+                {
+                  "name": "c48964e929983b543dd6",
+                  "type": "Advanced",
+                  "expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Latest Data Date"
+                    }
+                  },
+                  "howCreated": 0
+                }
+              ]
+            },
+            "singleVisual": {
+              "visualType": "cardVisual",
+              "objects": {},
+              "orderBy": [
+                {
+                  "Direction": 1,
+                  "Expression": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "KPIs"
+                        }
+                      },
+                      "Property": "Latest Data Date"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "objects": {
+      "merge": {
+        "outspacePane": [
+          {
+            "properties": {
+              "expanded": {
+                "expr": {
+                  "Literal": {
+                    "Value": "false"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,353 @@
+resources:
+  jobs:
+
+    # ─────────────────────────────────────────────
+    # Job 0a – One-time/idempotent setup: non-DLT silver tables (td_account, tf_billing_cost,
+    # tr_resource_tag, td_tag_key). Manual trigger only — run before the first execution of
+    # any silver load notebook, or after a schema/table is dropped and needs to be recreated.
+    # ─────────────────────────────────────────────
+    init_tables_silver:
+      name: "${var.domain}_${var.data_product}-init-tables-silver"
+
+      parameters:
+        - name: catalog_env
+          default: "${var.catalog_env}"
+        - name: catalog_name
+          default: "${var.it_catalog_name}"
+
+      tasks:
+        - task_key: init_tables_silver
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/init_tables_silver.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # ─────────────────────────────────────────────
+    # Job 0b – One-time/idempotent setup: gold Power BI views (dataplatform_usage schema).
+    # Manual trigger only — safe to re-run any time (every statement is CREATE OR REPLACE VIEW).
+    # ─────────────────────────────────────────────
+    init_views_gold:
+      name: "${var.domain}_${var.data_product}-init-views-gold"
+
+      parameters:
+        - name: catalog_env
+          default: "${var.catalog_env}"
+        - name: catalog_name
+          default: "${var.it_catalog_name}"
+
+      tasks:
+        - task_key: init_views_gold
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/gold/init_views_gold.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # Job 1 (raw_extract), Job 2 (sal_pipeline_run), and Job 2b (sal_pipeline_full_refresh)
+    # removed for now — raw extraction and SAL ingestion aren't currently deployed. See git
+    # history to restore. run_silver_pipeline / run_silver_full_refresh below no longer
+    # depend on a sal task as a result.
+
+    # ─────────────────────────────────────────────
+    # Job 2c – Full recompute of the query-cost-attribution and serving-cost-attribution MVs
+    # (attributed_cost pipeline owns both). Manual trigger only — use after a billing
+    # backfill/restatement window, a tf_query_history/tf_serving_usage full refresh, or
+    # whenever attribution numbers look inconsistent.
+    # ─────────────────────────────────────────────
+    attributed_cost_full_refresh:
+      name: "${var.domain}_${var.data_product}-attributed-cost-full-refresh"
+
+      tasks:
+        - task_key: attributed_cost_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.attributed_cost.id}
+            full_refresh: true
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # ─────────────────────────────────────────────
+    # Job 3 – Launch the Silver DLT pipeline
+    # ─────────────────────────────────────────────
+    silver_pipeline_run:
+      name: "${var.domain}_${var.data_product}-silver"
+
+      tasks:
+        - task_key: silver_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver.id}
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # ─────────────────────────────────────────────
+    # Job 3b – Full-refresh variant of the Silver DLT pipeline
+    # ─────────────────────────────────────────────
+    silver_pipeline_full_refresh:
+      name: "${var.domain}_${var.data_product}-silver-full-refresh"
+
+      tasks:
+        - task_key: silver_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver.id}
+            full_refresh: true
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # ─────────────────────────────────────────────
+    # Job 4 – Master orchestrator: silver -> {billing cost -> query/serving cost MVs}
+    #                                     ∥ {tag key -> resource tag}
+    # raw_extract -> sal steps removed for now — see the note near the top of this file.
+    # ─────────────────────────────────────────────
+    master:
+      name: "${var.domain}_${var.data_product}"
+      timeout_seconds: 3600
+
+      parameters:
+        - name: catalog_env
+          default: "${var.catalog_env}"
+        - name: catalog_name
+          default: "${var.it_catalog_name}"
+        - name: bronze_schema
+          default: "${var.data_product_bronze}"
+
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "UTC"
+        pause_status: ${var.job_schedule_status}
+
+      tasks:
+        - task_key: run_silver_pipeline
+          run_job_task:
+            job_id: ${resources.jobs.silver_pipeline_run.id}
+
+        # Loads td_workspace from access_workspaces_latest (externally-refreshed full
+        # snapshot, not part of the DLT silver pipeline). No dependency on raw/sal/silver —
+        # runs immediately, fully in parallel with the rest of this job.
+        - task_key: run_workspace
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_workspace.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Upserts td_billing_list_price (from billing_list_prices, externally-refreshed full
+        # snapshot) then costs tf_billing_usage into tf_billing_cost — must run after the
+        # silver pipeline (needs tf_billing_usage from that run).
+        - task_key: run_billing_cost
+          depends_on:
+            - task_key: run_silver_pipeline
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_billing_cost.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Upserts td_dbx_user/td_dbx_service_principal/td_identity from account_users/
+        # account_service_principals (externally-refreshed row-level upsert, not part of the
+        # DLT silver pipeline). No dependency on raw/sal/silver — runs immediately, fully in
+        # parallel with the rest of this job.
+        - task_key: run_identity
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_identity.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Rebuilds tr_dbx_user_security (recursive group-flattened user visibility) — needs
+        # td_dbx_user + tr_dbx_group_member from run_identity, nothing from the silver pipeline.
+        - task_key: run_user_security
+          depends_on:
+            - task_key: run_identity
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_user_security.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Builds td_tag_key from the tags MAP across silver dimensions — needs only the
+        # silver pipeline's output, so it runs in parallel with run_billing_cost.
+        - task_key: run_tag_key
+          depends_on:
+            - task_key: run_silver_pipeline
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_tag_key.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Upserts td_resource (unified resource dimension) from a UNION of 8 silver dimension
+        # tables — not DLT-managed (those 8 sources are apply_changes()-managed and receive
+        # row-level UPDATEs, which a streaming union can't tolerate). Needs the silver
+        # pipeline's output; runs in parallel with run_billing_cost/run_tag_key.
+        - task_key: run_resource
+          depends_on:
+            - task_key: run_silver_pipeline
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_resource.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Builds tr_resource_tag — needs td_tag_key (run_tag_key) and td_resource (run_resource).
+        - task_key: run_resource_tag
+          depends_on:
+            - task_key: run_tag_key
+            - task_key: run_resource
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_resource_tag.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Refreshes mvf_query_cost_attribution and mvf_serving_cost_attribution (both owned by
+        # the attributed_cost pipeline) — after run_billing_cost so tf_billing_cost (the cost
+        # pool for both allocations) is final. Incremental by default; force a recompute with
+        # the attributed-cost-full-refresh job.
+        - task_key: refresh_attributed_cost
+          depends_on:
+            - task_key: run_billing_cost
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.attributed_cost.id}
+
+      tags:
+        dataproduct_type: "consumer-aligned"
+
+    # ─────────────────────────────────────────────
+    # Job 5 – Init: full from-scratch rebuild of every data pipeline (silver -> post-DLT
+    # sentinels -> {billing cost -> query/serving cost MVs} ∥ {tag key -> resource tag}).
+    # Manual trigger only — no schedule. raw_extract -> sal steps removed for now — see the
+    # note near the top of this file; run_silver_full_refresh is this chain's starting task.
+    # Assumes schema objects already exist — run init_tables_silver and init_views_gold
+    # first on a brand new environment; they are not part of this chain.
+    # ─────────────────────────────────────────────
+    init:
+      name: "${var.domain}_${var.data_product}-init"
+
+      parameters:
+        - name: catalog_env
+          default: "${var.catalog_env}"
+        - name: catalog_name
+          default: "${var.it_catalog_name}"
+        - name: bronze_schema
+          default: "${var.data_product_bronze}"
+
+      tasks:
+        - task_key: run_silver_full_refresh
+          run_job_task:
+            job_id: ${resources.jobs.silver_pipeline_full_refresh.id}
+
+        # Sentinel rows for the DLT-managed tables (td_lakeflow_job, td_billing_app, …).
+        # Run once per environment — idempotent afterwards (WHEN NOT MATCHED), so safe to
+        # leave in this chain for repeat inits without side effects.
+        - task_key: run_post_dlt_silver
+          depends_on:
+            - task_key: run_silver_full_refresh
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/init_post_dlt_silver.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Loads td_workspace from access_workspaces_latest — not DLT-managed, no dependency
+        # on raw/sal/silver. Runs immediately, fully in parallel with the rest of this job.
+        - task_key: run_workspace
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_workspace.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Upserts td_billing_list_price (from billing_list_prices, externally-refreshed full
+        # snapshot) then costs tf_billing_usage into tf_billing_cost — must run after the
+        # silver pipeline (needs tf_billing_usage from that run).
+        - task_key: run_billing_cost
+          depends_on:
+            - task_key: run_silver_full_refresh
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_billing_cost.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Upserts td_dbx_user/td_dbx_service_principal/td_identity from account_users/
+        # account_service_principals — not DLT-managed, no dependency on raw/sal/silver. Runs
+        # immediately, fully in parallel with the rest of this job.
+        - task_key: run_identity
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_identity.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+              bronze_schema: "{{job.parameters.bronze_schema}}"
+
+        # Rebuilds tr_dbx_user_security (recursive group-flattened user visibility) — needs
+        # td_dbx_user + tr_dbx_group_member from run_identity, nothing from the silver pipeline.
+        - task_key: run_user_security
+          depends_on:
+            - task_key: run_identity
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_user_security.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Builds td_tag_key from the tags MAP across silver dimensions — needs only the
+        # silver pipeline's output, so it runs in parallel with run_billing_cost.
+        - task_key: run_tag_key
+          depends_on:
+            - task_key: run_silver_full_refresh
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_tag_key.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Upserts td_resource (unified resource dimension) from a UNION of 8 silver dimension
+        # tables — not DLT-managed. Sentinel rows (-10..0) come from init_tables_silver.sql
+        # (assumed already run per this job's precondition), untouched by this MERGE since
+        # their synthetic natural keys never match real dimension data.
+        - task_key: run_resource
+          depends_on:
+            - task_key: run_silver_full_refresh
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_resource.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Builds tr_resource_tag — needs td_tag_key (run_tag_key) and td_resource (run_resource).
+        - task_key: run_resource_tag
+          depends_on:
+            - task_key: run_tag_key
+            - task_key: run_resource
+          notebook_task:
+            notebook_path: "${var.root_path_src}/notebooks/silver/silver_resource_tag.sql"
+            base_parameters:
+              catalog_env: "{{job.parameters.catalog_env}}"
+              catalog_name: "{{job.parameters.catalog_name}}"
+
+        # Full recompute of mvf_query_cost_attribution and mvf_serving_cost_attribution — after
+        # run_billing_cost so tf_billing_cost (the cost pool for both) is final before
+        # allocation. Full (not incremental) since this is a from-scratch rebuild.
+        - task_key: run_attributed_cost_full_refresh
+          depends_on:
+            - task_key: run_billing_cost
+          run_job_task:
+            job_id: ${resources.jobs.attributed_cost_full_refresh.id}
+
+      tags:
+        dataproduct_type: "consumer-aligned"

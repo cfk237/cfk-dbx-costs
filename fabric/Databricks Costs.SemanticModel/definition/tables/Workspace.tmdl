@@ -1,0 +1,107 @@
+/// Dimension table containing Databricks workspaces within the account, used to attribute usage cost by workspace.
+table Workspace
+	lineageTag: ee7d5911-bc70-4e5c-8c20-63a842420b1c
+
+	/// Surrogate key uniquely identifying each workspace row. Hidden; used only for model relationships.
+	column 'Workspace Key'
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 87da7616-0286-47d7-aab7-2db9213342d2
+		summarizeBy: sum
+		sourceColumn: workspace_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks account identifier the workspace belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 537bd0d3-c088-4a10-8675-7b95edd4bf43
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks workspace identifier from the source system.
+	column 'Workspace ID'
+		dataType: string
+		lineageTag: 152c5d79-160e-4263-bac8-7c7b3de9e5bd
+		summarizeBy: none
+		sourceColumn: workspace_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Display name of the workspace.
+	column 'Workspace Name'
+		dataType: string
+		lineageTag: 4ed52ae8-4ac3-47b8-b9a2-30e54212d360
+		summarizeBy: none
+		sourceColumn: workspace_lb
+
+		changedProperty = Name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// URL used to access the workspace.
+	column 'Workspace URL'
+		dataType: string
+		lineageTag: 08347385-4d0b-4228-beef-abb84ea0cc10
+		summarizeBy: none
+		sourceColumn: workspace_url_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date the workspace was created.
+	column 'Created Date'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 42e0fdc8-2e16-46e4-be5d-7a8116881964
+		summarizeBy: none
+		sourceColumn: create_dt
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Current status of the workspace, e.g. active or terminated.
+	column Status
+		dataType: string
+		lineageTag: 8b4723af-ed4d-424d-9640-5d35b37464f2
+		summarizeBy: none
+		sourceColumn: status_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Environment derived from the workspace name: Development, Staging, Production or Other.
+	column Environment
+		dataType: string
+		lineageTag: 7f2018f5-4ee1-4c41-a976-0c86d80c986e
+		summarizeBy: none
+		sourceColumn: environment_lb
+		sortByColumn: 'Environment Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sort order for Environment: 1 Production, 2 Staging, 3 Development, 4 Other. Hidden; used only to sort the Environment column.
+	column 'Environment Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9fd53a9a-c049-447b-a890-7240a049a8c7
+		summarizeBy: none
+		sourceColumn: environment_order_nb
+
+	partition Workspace = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vd_pbi_workspace_View = Source{[Name="vd_pbi_workspace",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vd_pbi_workspace_View,{"workspace_id", "account_cd", "workspace_cd", "workspace_lb", "environment_lb", "environment_order_nb", "workspace_url_lb", "create_dt", "status_lb"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,131 @@
+# Composite action: variables
+#
+# Purpose:
+#   Resolves shared Fabric pipeline configuration values and exposes them as
+#   step outputs. Used by deploy-fabric-dev/staging/prod.yml and ci-fabric.yml.
+#
+# Design:
+#   Call this action once at the start of a job (after checkout), then reference
+#   outputs in subsequent steps:
+#
+#     - uses: ./.github/actions/fabric-variables
+#       id: vars
+#
+#     - uses: ./.github/actions/fabric-run-cicd
+#       with:
+#         python-version:      ${{ steps.vars.outputs.python-version }}
+#         fabric-cicd-version: ${{ steps.vars.outputs.fabric-cicd-version }}
+#         use-latest:          ${{ steps.vars.outputs.use-latest-fabric-cicd-version }}
+#         repository-directory: ${{ steps.vars.outputs.repository-directory }}
+#         items-type:          ${{ inputs.fabric-items-in-scope || steps.vars.outputs.fabric-items-in-scope }}
+#
+# Inputs (all optional — omit to use the project default):
+#   python-version                  : Override Python version (default: 3.12).
+#   fabric-cicd-version             : Override pinned fabric-cicd version.
+#   use-latest-fabric-cicd-version  : Override latest fabric-cicd flag ("true"/"false").
+#   repository-directory            : Override path to Fabric item definitions (default: ./fabric).
+#   fabric-items-in-scope           : Override default Fabric item types JSON array.
+#
+# Outputs:
+#   python-version                  : Resolved Python version.
+#   fabric-cicd-version             : Resolved fabric-cicd version.
+#   use-latest-fabric-cicd-version  : Resolved latest-fabric-cicd flag.
+#   repository-directory            : Resolved path to Fabric item definitions.
+#   fabric-items-in-scope           : Resolved default Fabric item types JSON array.
+#   vm-image                        : Recommended runner image (constant: ubuntu-latest).
+
+name: Fabric pipeline variables
+description: >
+  Resolves shared Fabric pipeline configuration values and exposes them as
+  step outputs for deploy-fabric-xxx.yml and ci-fabric.yml workflows.
+
+# ── User-overridable inputs (all optional) ────────────────────────────────────
+inputs:
+  python-version:
+    description: Python version override
+    required: false
+    default: ""
+  fabric-cicd-version:
+    description: Pinned fabric-cicd version override
+    required: false
+    default: ""
+  use-latest-fabric-cicd-version:
+    description: Override latest fabric-cicd flag ("true"/"false")
+    required: false
+    default: ""
+  repository-directory:
+    description: Override path to Fabric item definitions (default ./fabric)
+    required: false
+    default: ""
+  fabric-items-in-scope:
+    description: Override default Fabric item types JSON array
+    required: false
+    default: ""
+
+# ── Outputs ───────────────────────────────────────────────────────────────────
+outputs:
+  python-version:
+    description: Resolved Python version
+    value: ${{ steps.resolve.outputs.python-version }}
+  fabric-cicd-version:
+    description: Resolved pinned fabric-cicd version
+    value: ${{ steps.resolve.outputs.fabric-cicd-version }}
+  use-latest-fabric-cicd-version:
+    description: Resolved latest-fabric-cicd flag
+    value: ${{ steps.resolve.outputs.use-latest-fabric-cicd-version }}
+  repository-directory:
+    description: Resolved path to Fabric item definitions
+    value: ${{ steps.resolve.outputs.repository-directory }}
+  fabric-items-in-scope:
+    description: Resolved default Fabric item types JSON array
+    value: ${{ steps.resolve.outputs.fabric-items-in-scope }}
+  vm-image:
+    description: Recommended runner image (constant)
+    value: ${{ steps.resolve.outputs.vm-image }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve effective values
+      id: resolve
+      shell: bash
+      env:
+        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
+        INPUT_FABRIC_CICD_VERSION: ${{ inputs.fabric-cicd-version }}
+        INPUT_USE_LATEST: ${{ inputs.use-latest-fabric-cicd-version }}
+        INPUT_REPOSITORY_DIRECTORY: ${{ inputs.repository-directory }}
+        INPUT_FABRIC_ITEMS_IN_SCOPE: ${{ inputs.fabric-items-in-scope }}
+      run: |
+        # ── Defaults (single source of truth) ──────────────────────────────────
+        DEFAULT_PYTHON_VERSION="3.12"
+        DEFAULT_FABRIC_CICD_VERSION="0.3.1"
+        DEFAULT_USE_LATEST="true"
+        DEFAULT_REPOSITORY_DIRECTORY="fabric"
+        DEFAULT_FABRIC_ITEMS_IN_SCOPE='["DataPipeline","Dataflow","Report","SemanticModel","VariableLibrary"]'
+
+        # ── Effective values (user override → default) ──────────────────────────
+        PYTHON_VERSION="${INPUT_PYTHON_VERSION:-$DEFAULT_PYTHON_VERSION}"
+        FABRIC_CICD_VERSION="${INPUT_FABRIC_CICD_VERSION:-$DEFAULT_FABRIC_CICD_VERSION}"
+        USE_LATEST="${INPUT_USE_LATEST:-$DEFAULT_USE_LATEST}"
+        REPOSITORY_DIRECTORY="${INPUT_REPOSITORY_DIRECTORY:-$DEFAULT_REPOSITORY_DIRECTORY}"
+        FABRIC_ITEMS_IN_SCOPE="${INPUT_FABRIC_ITEMS_IN_SCOPE:-$DEFAULT_FABRIC_ITEMS_IN_SCOPE}"
+
+        # ── Constants ───────────────────────────────────────────────────────────
+        VM_IMAGE="ubuntu-latest"
+
+        # ── Write outputs ───────────────────────────────────────────────────────
+        {
+          echo "python-version=${PYTHON_VERSION}"
+          echo "fabric-cicd-version=${FABRIC_CICD_VERSION}"
+          echo "use-latest-fabric-cicd-version=${USE_LATEST}"
+          echo "repository-directory=${REPOSITORY_DIRECTORY}"
+          echo "fabric-items-in-scope=${FABRIC_ITEMS_IN_SCOPE}"
+          echo "vm-image=${VM_IMAGE}"
+        } >> "$GITHUB_OUTPUT"
+
+        # ── Summary ─────────────────────────────────────────────────────────────
+        echo "Resolved Fabric pipeline variables:"
+        echo "  python       = ${PYTHON_VERSION}"
+        echo "  fabric-cicd  = $( [ "$USE_LATEST" = "true" ] && echo 'latest' || echo "$FABRIC_CICD_VERSION" )"
+        echo "  repository   = ${REPOSITORY_DIRECTORY}"
+        echo "  items        = ${FABRIC_ITEMS_IN_SCOPE}"

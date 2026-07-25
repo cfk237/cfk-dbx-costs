@@ -1,0 +1,50 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "2200000000000000bb0a",
+  "position": {
+    "x": 0,
+    "y": 1000,
+    "z": 11000,
+    "height": 80,
+    "width": 1520,
+    "tabOrder": 11000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Data as of: ",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "10pt",
+                      "bold": false,
+                      "italic": false,
+                      "color": "#666666"
+                    }
+                  },
+                  {
+                    "value": "Refreshed daily from Databricks system tables. Costs shown in USD.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "10pt",
+                      "bold": false,
+                      "italic": false,
+                      "color": "#666666"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "Left"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

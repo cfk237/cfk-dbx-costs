@@ -1,0 +1,259 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "24013ac68996b9b3303a",
+  "position": {
+    "x": 3.6984441449405381,
+    "y": 488.87447058662178,
+    "z": 1000,
+    "height": 419.45383615084523,
+    "width": 1490.5591677503251,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Identity"
+                    }
+                  },
+                  "Property": "Identity Name"
+                }
+              },
+              "queryRef": "Identity.Identity Name",
+              "nativeQueryRef": "Identity Name",
+              "active": true
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Identity"
+                    }
+                  },
+                  "Property": "Identity Type"
+                }
+              },
+              "queryRef": "Identity.Identity Type",
+              "nativeQueryRef": "Identity Type",
+              "active": true
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Total Cost (USD)"
+                }
+              },
+              "queryRef": "KPIs.Total Cost (USD)",
+              "nativeQueryRef": "Total Cost (USD)",
+              "active": true,
+              "displayName": "Total Cost (USD)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "% of Total"
+                }
+              },
+              "queryRef": "KPIs.% of Total (Identity)",
+              "nativeQueryRef": "% of Total (Identity)",
+              "active": true
+            }
+          ],
+          "fieldParameters": [
+            {
+              "parameterExpr": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "CostOrUsage"
+                    }
+                  },
+                  "Property": "CostOrUsage"
+                }
+              },
+              "index": 2,
+              "length": 1,
+              "sortDirection": "Descending"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "KPIs"
+                  }
+                },
+                "Property": "Total Cost (USD)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "general": [
+        {
+          "properties": {}
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "columnAdjustment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'growToFit'"
+                }
+              }
+            },
+            "defaultColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "90D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "513.7841281916833D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "Resource.Resource Name"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Identity Detail'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "general": [
+        {
+          "properties": {
+            "keepLayerOrder": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  },
+  "parentGroupName": "f8d5286b9200098d73a2",
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "30c64f1f390bcde14807",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Identity"
+              }
+            },
+            "Property": "Identity Name"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "ed9c90d6a0026044e2bb",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Identity"
+              }
+            },
+            "Property": "Identity Type"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "a432def178804759be17",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "KPIs"
+              }
+            },
+            "Property": "Total Cost (USD)"
+          }
+        },
+        "type": "Advanced"
+      },
+      {
+        "name": "4380855e1ec4a1d56cd4",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "KPIs"
+              }
+            },
+            "Property": "% of Total"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
+  },
+  "isHidden": true
+}

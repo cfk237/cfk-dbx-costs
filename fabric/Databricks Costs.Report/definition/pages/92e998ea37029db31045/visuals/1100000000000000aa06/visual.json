@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "1100000000000000aa06",
+  "position": {
+    "x": 760,
+    "y": 80,
+    "z": 6000,
+    "height": 160,
+    "width": 380,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "KPIs"
+                    }
+                  },
+                  "Property": "Cost (USD) YoY (%)"
+                }
+              },
+              "queryRef": "KPIs.Cost (USD) YoY (%)",
+              "nativeQueryRef": "Cost (USD) YoY (%)",
+              "active": true
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

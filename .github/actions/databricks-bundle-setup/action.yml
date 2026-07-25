@@ -1,0 +1,62 @@
+name: Databricks Bundle Setup & Validate
+description: Install Databricks CLI, configure profile, debug and validate bundle
+
+inputs:
+  target:
+    description: "Databricks bundle target (dev / staging / prod)"
+    required: true
+  host:
+    description: "Databricks workspace URL"
+    required: true
+  sp-application-id:
+    description: "Service principal application ID"
+    required: true
+  sp-secret:
+    description: "Service principal secret"
+    required: true
+  app-id:
+    description: "App ID for bundle variables"
+    required: true
+  ipaas-group-access:
+    description: "iPaaS group name for DollarU to run jobs"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Set up Databricks CLI
+      uses: databricks/setup-cli@main
+
+    - name: Configure Databricks CLI profile
+      shell: bash
+      run: |
+        cat <<EOF > ~/.databrickscfg
+        [${{ inputs.target }}]
+        host = ${{ inputs.host }}
+        auth_type = oauth-m2m
+        client_id = ${{ inputs.sp-application-id }}
+        client_secret = ${{ inputs.sp-secret }}
+        EOF
+
+    - name: Debug Databricks environment
+      shell: bash
+      run: |
+        echo "WORKSPACE_URL: ${{ inputs.host }}"
+        echo "SP_APPLICATION_ID: ${{ inputs.sp-application-id }}"
+        echo "APP_ID: ${{ inputs.app-id }}"
+        echo "TARGET: ${{ inputs.target }}"
+
+    - name: Validate Databricks Bundle
+      shell: bash
+      working-directory: databricks
+      run: |
+        databricks bundle validate \
+          --target ${{ inputs.target }} \
+          --profile ${{ inputs.target }} \
+          --var sp_application_id=${{ inputs.sp-application-id }} \
+          --var app_id=${{ inputs.app-id }} \
+          --var dollaru_group_name="${{ inputs.ipaas-group-access }}" \

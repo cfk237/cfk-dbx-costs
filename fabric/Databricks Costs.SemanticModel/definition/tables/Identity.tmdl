@@ -1,0 +1,105 @@
+/// Dimension table containing Databricks identities (users and service principals) used to attribute usage cost to who ran the workload.
+table Identity
+	lineageTag: 73d08abf-794e-484e-8cf0-17b815477e89
+
+	/// Surrogate key uniquely identifying each identity row. Hidden; used only for model relationships.
+	column 'Identity Key'
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 34851e4f-cbbc-4f00-bea2-5de027a0c4b6
+		summarizeBy: sum
+		sourceColumn: identity_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Databricks account identifier the identity belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 4bbb90a6-7380-4740-b3d1-2cb781aa4446
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Type of identity, e.g. user or service principal.
+	column 'Identity Type'
+		dataType: string
+		lineageTag: 4ad53a17-b177-45fa-85c2-8763baa4b753
+		summarizeBy: none
+		sourceColumn: identity_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Identity identifier from the Databricks source system (user ID or service principal ID).
+	column 'Source ID'
+		dataType: string
+		lineageTag: 671ffd20-f60e-46ed-8424-6ee399fe4a4b
+		summarizeBy: none
+		sourceColumn: source_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Display name of the identity.
+	column 'Identity Name'
+		dataType: string
+		lineageTag: f3617cf4-7c80-4d3c-af99-111848972838
+		summarizeBy: none
+		sourceColumn: display_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// First name of the identity, when applicable to user identities.
+	column 'First Name'
+		dataType: string
+		lineageTag: e0c666d4-44e5-4d28-937b-dffc19af8e89
+		summarizeBy: none
+		sourceColumn: first_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Last name of the identity, when applicable to user identities.
+	column 'Last Name'
+		dataType: string
+		lineageTag: 89421f9c-a8dc-4899-8f1c-440a3df1eea6
+		summarizeBy: none
+		sourceColumn: last_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether the identity is currently active (Yes) or inactive (No).
+	column 'Is Active'
+		dataType: string
+		lineageTag: b3d23ace-e149-4599-9169-7e3dfaee83ac
+		summarizeBy: none
+		sourceColumn: is_active_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Natural identifier of the identity from the source system (username for users, application ID for service principals). Hidden; used for lookups, not for reporting.
+	column 'Identity ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 960f1199-13ea-416c-9057-1409c3d40037
+		summarizeBy: none
+		sourceColumn: identity_cd
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Identity = m
+		mode: import
+		source =
+				let
+					Source = _RawIdentity
+				in
+					Source
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,51 @@
+table Period
+	lineageTag: 7cfa090f-7a21-4d5f-9dc6-8557f689e6c2
+
+	column Period
+		lineageTag: bd6d2e2c-4cf8-4acd-a69a-683727bc04a3
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Period Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Period Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Fields'
+		isHidden
+		lineageTag: 53e86eef-5e5e-495a-b207-9c40e9c76f31
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Period Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Period Order'
+		isHidden
+		formatString: 0
+		lineageTag: b7a7835b-6f19-4e12-9e99-8fddaea2c4cf
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Period = calculated
+		mode: import
+		source =
+				{
+				    ("Year", NAMEOF('Calendar'[Year]), 0),
+				    ("Quarter", NAMEOF('Calendar'[Quarter]), 1),
+				    ("Month", NAMEOF('Calendar'[Month]), 2),
+				    ("Week", NAMEOF('Calendar'[Week]), 3),
+				    ("Date", NAMEOF('Calendar'[Date]), 4)
+				}
+
+	annotation PBI_Id = 4362ae4d90d34c65a803b74de43eed33
+

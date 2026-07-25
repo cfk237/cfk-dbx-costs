@@ -1,0 +1,50 @@
+relationship 'Costs_Resource Key_Resource_Resource Key'
+	fromColumn: Costs.'Resource Key'
+	toColumn: Resource.'Resource Key'
+
+relationship 'Costs_Identity Key_Identity_Identity Key'
+	fromColumn: Costs.'Identity Key'
+	toColumn: Identity.'Identity Key'
+
+relationship 'Costs_Workspace Key_Workspace_Workspace Key'
+	fromColumn: Costs.'Workspace Key'
+	toColumn: Workspace.'Workspace Key'
+
+relationship 'Resource Tag_Resource Key_Resource_Resource Key'
+	crossFilteringBehavior: bothDirections
+	fromColumn: ResourceTag.'Resource Key'
+	toColumn: Resource.'Resource Key'
+
+relationship 'Resource Tag_Tag Key ID_Tag_Tag Key ID'
+	fromColumn: ResourceTag.'Tag Key'
+	toColumn: Tag.'Tag Key'
+
+relationship 'Costs_Usage Date_Calendar_Date'
+	fromColumn: Costs.'Usage Date'
+	toColumn: Calendar.Date
+
+relationship 'Resource_Owned By_IdentityOwner_Identity ID'
+	fromColumn: Resource.'Owned By'
+	toColumn: IdentityOwner.'Identity ID'
+
+relationship 25967a1d-19e2-4b44-9a88-0972b7494e41
+	fromColumn: QueryCosts.'Usage Date'
+	toColumn: Calendar.Date
+
+relationship 12f26386-9583-4189-9752-25e7cc20485a
+	fromColumn: QueryCosts.'Identity Key'
+	toColumn: Identity.'Identity Key'
+
+relationship d5ebac45-e82e-4ca4-aa8f-b5052abd06ea
+	fromColumn: QueryCosts.'Workspace Key'
+	toColumn: Workspace.'Workspace Key'
+
+relationship d4ba24f1-3861-275f-786c-00b86501aad8
+	fromColumn: QueryCosts.'Resource Key'
+	toColumn: Resource.'Resource Key'
+
+relationship 1e8779e2-66fb-d976-9920-d3e2eaea3f41
+	toCardinality: many
+	fromColumn: ResourceTag.'Tag Value'
+	toColumn: Apps.'Application Code'
+

@@ -1,0 +1,69 @@
+/// Time Calculation Group for current period
+table TimeCalculation
+	lineageTag: 60c49e4c-8d1b-41a4-b958-29c22a7591fd
+
+	calculationGroup
+
+		calculationItem Current = SELECTEDMEASURE()
+
+		calculationItem MAT =
+				VAR Mth = 12
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATESINPERIOD ( 'Gregorian', MAX ( 'Calendar'[Date] ), - Mth, MONTH, ENDALIGNED )
+				    )
+
+		calculationItem L9M =
+				VAR Mth = 9
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATESINPERIOD ( 'Gregorian', MAX ( 'Calendar'[Date] ), - Mth, MONTH, ENDALIGNED )
+				    )
+
+		calculationItem L6M =
+				VAR Mth = 6
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATESINPERIOD ( 'Gregorian', MAX ( 'Calendar'[Date] ), - Mth, MONTH, ENDALIGNED )
+				    )
+
+		calculationItem L3M =
+				VAR Mth = 3
+				RETURN
+				    CALCULATE (
+				        SELECTEDMEASURE (),
+				        DATESINPERIOD ( 'Gregorian', MAX ( 'Calendar'[Date] ), - Mth, MONTH, ENDALIGNED )
+				    )
+
+		calculationItem MTD = TOTALMTD ( SELECTEDMEASURE (), 'Gregorian' )
+
+		calculationItem YTD = TOTALYTD ( SELECTEDMEASURE (), 'Gregorian' )
+
+		calculationItem WTD = TOTALWTD ( SELECTEDMEASURE (), 'Gregorian' )
+
+		calculationItem QTD = TOTALQTD ( SELECTEDMEASURE (), 'Gregorian' )
+
+	/// Label identifying the time aggregation option
+	column 'Time Aggregation'
+		dataType: string
+		lineageTag: 9d99c52e-90df-4514-8892-a883d3678b18
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sort order of the calculation items. Hidden; sorts the Time Aggregation column.
+	column Ordinal
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 63571d44-d3c1-46b7-98cd-027ebbf31213
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

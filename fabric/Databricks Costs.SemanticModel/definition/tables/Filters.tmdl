@@ -1,0 +1,55 @@
+table Filters
+	lineageTag: c62df16d-c774-4b7d-917b-04b81f004603
+
+	column Filters
+		lineageTag: 03fd3af7-bed6-4c35-8785-a93b7f9cdec2
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'Filters Order'
+
+		relatedColumnDetails
+			groupByColumn: 'Filters Fields'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Filters Fields'
+		isHidden
+		lineageTag: 2e467b61-8f36-4ac6-8807-5a28d0edb1c5
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'Filters Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Filters Order'
+		isHidden
+		formatString: 0
+		lineageTag: 68af3eb3-9290-43aa-b55a-83ccff071c01
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Filters Title'
+		lineageTag: 332517ef-1d53-4ddf-8edb-a1f52cc66382
+		sourceColumn: [Value4]
+
+	partition Filters = calculated
+		mode: import
+		source =
+				{
+				    ( "Identity Type", NAMEOF ( 'Identity'[Identity Type] ), 0, "Identity Type" ),
+				    ( "Resource Type", NAMEOF ( 'Resource'[Resource Type] ), 1, "Resource Type" ),
+				    ( "Workspace Name", NAMEOF ( 'Workspace'[Workspace Name] ), 2, "Workspace Name" ),
+				    ( "Identity Name", NAMEOF ( 'Identity'[Identity Name] ), 3, "Identity Name" ),
+				    ( "Client Application", NAMEOF ( 'QueryCosts'[Client Application] ), 4, "Client Application" )
+				}
+
+	annotation PBI_Id = 7b171b5a63644de78ca62c305dc2aaa9
+
