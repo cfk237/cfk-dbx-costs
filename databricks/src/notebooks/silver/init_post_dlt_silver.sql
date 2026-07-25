@@ -12,7 +12,7 @@
 -- MAGIC with `legacy/silver/init_tables_silver_dlt_managed.sql` causes a conflict (`MANAGED table
 -- MAGIC already exists`). Instead:
 -- MAGIC 1. Run the DLT pipeline → tables are created by DLT
--- MAGIC 2. Run **this notebook** → sentinel rows and identity column adjustments are applied
+-- MAGIC 2. Run **this notebook** → sentinel rows are applied
 -- MAGIC
 -- MAGIC ### Tables initialised
 -- MAGIC | Table | Sentinels |

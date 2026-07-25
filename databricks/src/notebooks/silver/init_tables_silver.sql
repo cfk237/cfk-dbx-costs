@@ -17,14 +17,18 @@
 -- MAGIC | `td_dbx_user` | `silver_identity.sql` |
 -- MAGIC | `td_dbx_service_principal` | `silver_identity.sql` |
 -- MAGIC | `td_identity` | `silver_identity.sql` |
+-- MAGIC | `td_dbx_group` | `silver_identity.sql` |
+-- MAGIC | `tr_dbx_group_member` | `silver_identity.sql` |
+-- MAGIC | `tr_dbx_user_security` | `silver_user_security.sql` |
 -- MAGIC | `td_resource` | `silver_resource.sql` |
 -- MAGIC
 -- MAGIC DLT-managed tables (`td_lakeflow_job(_history)`, `td_lakeflow_pipeline(_history)`,
 -- MAGIC `td_compute_cluster(_history)`, `td_compute_warehouse(_history)`,
 -- MAGIC `tf_billing_usage`, `td_billing_app`,
--- MAGIC `td_billing_notebook`, `td_billing_endpoint`, `td_billing_network`) are declared by
--- MAGIC `dlt.create_streaming_table()` in `pipelines/silver/silver_dimensions.py` and
--- MAGIC `silver_billing.py` — their DDL is no longer created here. The original DDL (and the DROP
+-- MAGIC `td_billing_notebook`, `td_billing_endpoint`, `td_billing_network`,
+-- MAGIC `td_billing_data_quality_monitoring`, `td_serving_entity(_history)`) are declared by
+-- MAGIC `dlt.create_streaming_table()` in `pipelines/silver/silver_dimensions.py`,
+-- MAGIC `silver_billing.py`, and `silver_serving.py` — their DDL is no longer created here. The original DDL (and the DROP
 -- MAGIC cell needed before a DLT pipeline's first run, if these tables pre-exist as plain managed
 -- MAGIC tables) is kept for reference in `legacy/silver/init_tables_silver_dlt_managed.sql`.
 -- MAGIC

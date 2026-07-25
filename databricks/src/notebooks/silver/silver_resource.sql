@@ -24,8 +24,9 @@
 -- MAGIC |---|---|
 -- MAGIC | 11 silver dimension tables (`UNION ALL`) | `global_it_hub.td_resource` |
 -- MAGIC
--- MAGIC **Prerequisites**: run the silver DLT pipeline first — all 11 source tables must be
--- MAGIC populated.
+-- MAGIC **Prerequisites**: run the silver DLT pipeline first — 10 of the 11 source tables are
+-- MAGIC DLT-managed. The 11th, `td_workspace` (source of the PREDICTIVE OPTIMIZATION branch), is
+-- MAGIC not DLT-managed — run `silver_workspace.sql` too.
 -- MAGIC
 -- MAGIC ### Processing strategy
 -- MAGIC No watermark: every run re-reads all 11 source tables in full (each is already a small

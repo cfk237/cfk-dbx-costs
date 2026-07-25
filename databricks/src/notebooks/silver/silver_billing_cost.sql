@@ -36,7 +36,7 @@
 -- MAGIC still have a fresh `sys_load_dt`, so they are picked up). On an empty target it
 -- MAGIC defaults to epoch → full load.
 -- MAGIC
--- MAGIC Merge key: `(record_cd, ingestion_dt)` — `ingestion_dt` enables partition pruning on target.
+-- MAGIC Merge key: `(account_cd, workspace_cd, record_cd, ingestion_dt)` — `ingestion_dt` enables partition pruning on target.
 -- MAGIC UPDATE fires when `line_cost_usd` or other tracked fields change (e.g. list price correction).
 -- MAGIC RETRACTION and RESTATEMENT records carry their own `record_cd` and are inserted as separate rows.
 
