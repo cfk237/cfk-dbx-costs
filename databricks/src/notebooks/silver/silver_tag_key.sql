@@ -22,7 +22,6 @@
 -- MAGIC - All eight sources are combined via `UNION ALL` then deduplicated on `tag_key_cd`
 -- MAGIC - Natural key: `tag_key_cd` only — tag key names are global (workspace-agnostic)
 -- MAGIC - `WHEN NOT MATCHED` only — tag key names are immutable by definition; no UPDATE needed
--- MAGIC - Sentinel rows (`tag_key_id < 0`) excluded via `WHERE … > 0`
 -- MAGIC
 -- MAGIC **Prerequisites**: run the SCD2 silver load notebooks (jobs, pipelines, clusters, warehouses)
 -- MAGIC and the billing usage load (`silver_billing_usage` / DLT `silver_billing`) before this

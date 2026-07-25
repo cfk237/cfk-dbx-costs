@@ -1,24 +1,27 @@
 -- Databricks notebook source
 -- DBTITLE 1,Notebook Summary
 -- MAGIC %md
--- MAGIC ## Silver — Identity Dimension (Users & Service Principals, SCD1)
+-- MAGIC ## Silver — Identity & Group Dimensions (Users, Service Principals, Groups, SCD1)
 -- MAGIC
 -- MAGIC Loads account-level identities into `td_dbx_user`, `td_dbx_service_principal`, and the
--- MAGIC unified `td_identity`.
+-- MAGIC unified `td_identity`; loads SCIM group membership into `td_dbx_group` and
+-- MAGIC `tr_dbx_group_member`.
 -- MAGIC
--- MAGIC **Source:** `account_users` / `account_service_principals` — populated by an Account
--- MAGIC API export job (`export_principals.py`) via row-level upsert + soft-delete (one row per
--- MAGIC id; a row missing from a later API pull gets `deleted_at` set rather than being
--- MAGIC physically removed). That refresh pattern rules out a DLT streaming view/`apply_changes()`
--- MAGIC — same reasoning as `td_workspace`/`td_billing_list_price`: a row-level MERGE source is
--- MAGIC not append-only, so `skipChangeCommits=true` would only ever capture each row's first
--- MAGIC snapshot and never see later updates.
+-- MAGIC **Source:** `account_users` / `account_service_principals` / `account_groups` —
+-- MAGIC populated by an Account API export job (`export_principals.py`) via row-level upsert +
+-- MAGIC soft-delete (one row per id; a row missing from a later API pull gets `deleted_at` set
+-- MAGIC rather than being physically removed). That refresh pattern rules out a DLT streaming
+-- MAGIC view/`apply_changes()` — same reasoning as `td_workspace`/`td_billing_list_price`: a
+-- MAGIC row-level MERGE source is not append-only, so `skipChangeCommits=true` would only ever
+-- MAGIC capture each row's first snapshot and never see later updates.
 -- MAGIC
 -- MAGIC | Source | Target |
 -- MAGIC |---|---|
 -- MAGIC | `{bronze_schema}.account_users` | `global_it_hub.td_dbx_user` |
 -- MAGIC | `{bronze_schema}.account_service_principals` | `global_it_hub.td_dbx_service_principal` |
 -- MAGIC | (union of both, staged) | `global_it_hub.td_identity` |
+-- MAGIC | `{bronze_schema}.account_groups` | `global_it_hub.td_dbx_group` |
+-- MAGIC | `{bronze_schema}.account_groups` (members exploded) | `global_it_hub.tr_dbx_group_member` |
 -- MAGIC
 -- MAGIC ### Field remapping
 -- MAGIC Both source tables carry only a handful of scalar columns (`id`, `account_id` — aliased
@@ -43,6 +46,17 @@
 -- MAGIC `silver_workspace.sql`. `v_account_users`/`v_account_service_principals` are staged once
 -- MAGIC as temp tables (each referenced twice — once to MERGE its own `td_*` table, once in the
 -- MAGIC `td_identity` union) so the `raw` JSON is parsed only once per source row.
+-- MAGIC
+-- MAGIC ### Groups
+-- MAGIC `account_groups` is a full snapshot every run, same as the users/service-principals
+-- MAGIC sources. `td_dbx_group` has no SCIM "active" attribute (unlike users/service principals),
+-- MAGIC so `is_active_fl` is derived from `deleted_at` alone. `tr_dbx_group_member` explodes
+-- MAGIC `account_groups.raw.members` into one row per `(group, member)` edge — `member_type_lb`/
+-- MAGIC `member_cd` are parsed from the SCIM `$ref` path — and, since the source is a full
+-- MAGIC snapshot every run, flags rows absent from the latest snapshot with `is_deleted_fl = 1`
+-- MAGIC rather than deleting them (same pattern as `td_workspace`). Read inline, not staged: unlike
+-- MAGIC users/service principals, `td_dbx_group` and `tr_dbx_group_member` need different parts of
+-- MAGIC `raw` (`displayName` vs. `members`), so there is no shared parse to save by staging.
 
 -- COMMAND ----------
 
