@@ -1,0 +1,64 @@
+/// Bridge table linking Databricks SCIM groups to their direct members (users, service principals, or nested groups), enabling group membership reporting.
+table GroupMember
+	lineageTag: e03f4bdb-25b7-43f5-a4bd-d9b717b22729
+
+	/// Databricks account identifier the membership belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 81a340c2-0600-4aff-9698-64e175a99c10
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Natural key of the group that owns this membership. Hidden; used only for model relationships.
+	column 'Group ID'
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 18bbcd45-5f7a-4cee-b7a0-994f828b2430
+		summarizeBy: none
+		sourceColumn: group_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Natural key (SCIM ID) of the member — a user, service principal, or another (nested) group depending on Member Type.
+	column 'Member ID'
+		dataType: string
+		lineageTag: 46fecda8-eec0-4c85-beaa-70a9d4ba89e3
+		summarizeBy: none
+		sourceColumn: member_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Principal type of the member — Users, ServicePrincipals, or Groups.
+	column 'Member Type'
+		dataType: string
+		lineageTag: 798a06ab-4488-4c41-b2fd-991e35e7de3f
+		summarizeBy: none
+		sourceColumn: member_type_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether this membership is absent from the latest source snapshot (Yes) or currently active (No).
+	column 'Is Deleted'
+		dataType: string
+		lineageTag: 66baa969-394b-4204-a66c-0150ca34abe5
+		summarizeBy: none
+		sourceColumn: is_deleted_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	partition GroupMember = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vr_pbi_dbx_group_member_View = Source{[Name="vr_pbi_dbx_group_member",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vr_pbi_dbx_group_member_View,{"account_cd", "group_cd", "member_cd", "member_type_lb", "is_deleted_fl"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

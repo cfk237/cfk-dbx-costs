@@ -1,0 +1,35 @@
+/// Security bridge table: for each Databricks user, the flattened set of users/service principals they share visibility with, resolved recursively through nested group membership. Intended as a row-level security lookup, not a general reporting relationship.
+table UserSecurity
+	lineageTag: 98bf03db-2167-4759-a556-24245234075b
+
+	/// Natural key (SCIM user ID) of the acting/viewing user.
+	column 'User ID'
+		dataType: string
+		lineageTag: 1a03bf46-fd67-4a1b-803d-68c0ce0e08ca
+		summarizeBy: none
+		sourceColumn: user_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Natural key (SCIM ID) of the user or service principal visible to User ID. Equals User ID for the self row.
+	column 'Member ID'
+		dataType: string
+		lineageTag: f26cc2ba-0e4c-4fc8-9f54-8073a15718ab
+		summarizeBy: none
+		sourceColumn: member_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	partition UserSecurity = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vr_pbi_dbx_user_security_View = Source{[Name="vr_pbi_dbx_user_security",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vr_pbi_dbx_user_security_View,{"user_cd", "member_cd"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
