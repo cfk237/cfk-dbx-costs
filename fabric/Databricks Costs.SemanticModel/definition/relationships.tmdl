@@ -48,3 +48,7 @@ relationship 1e8779e2-66fb-d976-9920-d3e2eaea3f41
 	fromColumn: ResourceTag.'Tag Value'
 	toColumn: Apps.'Application Code'
 
+relationship 'GroupMember_Group ID_Group_Group ID'
+	fromColumn: GroupMember.'Group ID'
+	toColumn: Group.'Group ID'
+

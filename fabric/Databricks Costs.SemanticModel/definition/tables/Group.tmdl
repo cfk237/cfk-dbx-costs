@@ -1,0 +1,68 @@
+/// Dimension table containing Databricks SCIM groups within the account, used to attribute group membership and security visibility.
+table Group
+	lineageTag: 494c6722-5ebe-4ea9-84ca-dfcadadc7fd0
+
+	/// Databricks account identifier the group belongs to.
+	column 'Account ID'
+		dataType: string
+		lineageTag: 885a63f5-5217-432d-9cad-0acb0d4ebdb0
+		summarizeBy: none
+		sourceColumn: account_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Natural identifier of the group from the source system (SCIM group ID). Hidden; used only for model relationships.
+	column 'Group ID'
+		dataType: string
+		isHidden
+		isKey
+		isAvailableInMdx: false
+		lineageTag: eba5104d-0c81-4f41-be6f-21ea2342accd
+		summarizeBy: none
+		sourceColumn: group_cd
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Display name of the group.
+	column 'Group Name'
+		dataType: string
+		lineageTag: 48280440-3a86-4128-9f73-a147f368492e
+		summarizeBy: none
+		sourceColumn: display_name_lb
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Flag indicating whether the group is currently active (Yes) or soft-deleted (No).
+	column 'Is Active'
+		dataType: string
+		lineageTag: 1398ca73-7bf8-47d7-ad27-975434d36e8d
+		summarizeBy: none
+		sourceColumn: is_active_fl
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Surrogate key uniquely identifying each group row. Hidden; not used for model relationships.
+	column 'Group Key'
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 03fa319f-3a5d-4075-86d1-72e0904d5532
+		summarizeBy: none
+		sourceColumn: group_id
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Group = m
+		mode: import
+		source =
+				let
+				    Source = _Catalog,
+				    vd_pbi_dbx_group_View = Source{[Name="vd_pbi_dbx_group",Kind="View"]}[Data],
+				    #"Removed Other Columns" = Table.SelectColumns(vd_pbi_dbx_group_View,{"group_id", "account_cd", "group_cd", "display_name_lb", "is_active_fl"})
+				in
+				    #"Removed Other Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table

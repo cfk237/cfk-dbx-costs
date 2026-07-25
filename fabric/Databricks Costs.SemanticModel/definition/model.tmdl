@@ -13,7 +13,7 @@ queryGroup Parameters
 
 annotation __PBI_TimeIntelligenceEnabled = 0
 
-annotation PBI_QueryOrder = ["p_AwsUrl","p_AwsWarehouse","p_CatalogName","p_Schema","p_SchemaOneid","fn_Calendar","KPIs","_Catalog","_CatalogOneid","_RawIdentity","Identity","Resource","Workspace","Tag","ResourceTag","Costs","Calendar","_DatesPoints","OneidUser","IdentityOwner","RefreshDate","QueryCosts","Apps","Domains","Sub Domains"]
+annotation PBI_QueryOrder = ["p_AwsUrl","p_AwsWarehouse","p_CatalogName","p_Schema","p_SchemaOneid","fn_Calendar","KPIs","_Catalog","_CatalogOneid","_RawIdentity","Identity","Resource","Workspace","Tag","ResourceTag","Costs","Calendar","_DatesPoints","OneidUser","IdentityOwner","RefreshDate","QueryCosts","Apps","Domains","Sub Domains","Group","GroupMember","UserSecurity"]
 
 annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling","CalcGroup","TMDLView_Desktop","DaxQueryView_Desktop"]
 
@@ -40,6 +40,9 @@ ref table CostOrUsage
 ref table Period
 ref table Parameter
 ref table Apps
+ref table Group
+ref table GroupMember
+ref table UserSecurity
 
 ref cultureInfo en-US
 
