@@ -75,7 +75,7 @@ dp.create_streaming_table("sal_compute_warehouses", table_properties=_bronze,
 dp.create_streaming_table("sal_billing_usage", table_properties=_bronze,
     comment="SAL staging for system.billing.usage. One row per billing record per account.")
 dp.create_streaming_table("sal_query_history", table_properties=_bronze,
-    comment="SAL staging for system.query.history. One row per statement execution, account-level.")
+    comment="SAL staging for system.query.history. One row per statement execution, regional (each workspace sees only its own region).")
 
 # COMMAND ----------
 

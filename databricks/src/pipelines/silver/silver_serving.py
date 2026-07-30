@@ -46,10 +46,11 @@
 # MAGIC    already be populated. This file assumes they exist — they are loaded externally
 # MAGIC    (outside this repo); request `system.serving.endpoint_usage` / `system.serving.served_entities`
 # MAGIC    be added there if they aren't yet available.
-# MAGIC 2. Add this file to the `silver` DLT pipeline's `libraries` list (`resources/pipelines.yml`)
-# MAGIC 3. Trigger a full-refresh run of the silver pipeline
-# MAGIC 4. Add `td_serving_entity` sentinel rows (-2 Unassigned, -1 Unknown) to
-# MAGIC    `init_post_dlt_silver.sql`, matching the `td_billing_endpoint` pattern
+# MAGIC 2. Trigger a full-refresh run of the silver pipeline
+# MAGIC
+# MAGIC Already wired up — no action needed: this file is in the `silver` pipeline's `libraries`
+# MAGIC list (`resources/pipelines.yml`), and `td_serving_entity` sentinel rows (-2 Unassigned,
+# MAGIC -1 Unknown) are inserted by `init_post_dlt_silver.sql`, matching `td_billing_endpoint`.
 
 # COMMAND ----------
 

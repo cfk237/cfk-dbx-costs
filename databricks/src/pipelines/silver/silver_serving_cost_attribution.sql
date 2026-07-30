@@ -3,7 +3,8 @@
 -- MAGIC %md
 -- MAGIC ## DLT — Serving Cost Attribution (Materialized View)
 -- MAGIC
--- MAGIC Single-MV pipeline. Allocates each endpoint-day's billed cost (`tf_billing_cost`)
+-- MAGIC Single-MV notebook in the `attributed_cost` pipeline. Allocates each endpoint-day's
+-- MAGIC billed cost (`tf_billing_cost`)
 -- MAGIC across the AI Gateway requests served by that endpoint that day (`tf_serving_usage`),
 -- MAGIC proportionally to token volume.
 -- MAGIC

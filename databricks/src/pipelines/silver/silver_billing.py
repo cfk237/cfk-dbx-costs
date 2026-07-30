@@ -11,7 +11,7 @@
 # MAGIC | `td_billing_app` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to app_id |
 # MAGIC | `td_billing_notebook` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to notebook_id |
 # MAGIC | `td_billing_endpoint` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to endpoint_id |
-# MAGIC | `td_billing_network` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to networking_client |
+# MAGIC | `td_billing_network` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to networking_client IS NOT NULL OR billing_origin_product = NETWORKING (key defaults to 'NETWORKING') |
 # MAGIC | `td_billing_data_quality_monitoring` | Dimension SCD1 | `{bronze_schema}.billing_usage` filtered to billing_origin_product = DATA_QUALITY_MONITORING |
 # MAGIC
 # MAGIC **`td_billing_list_price` and `tf_billing_cost` are managed by `silver_billing_cost.sql`**
@@ -27,8 +27,10 @@
 # MAGIC - Target schema: `global_it_hub`
 # MAGIC - Pipeline parameters: `pipeline.catalog_name`, `pipeline.catalog_env`, `pipeline.schema_bronze`
 # MAGIC
-# MAGIC **`usage_metadata`** is stored as a raw struct in `tf_billing_usage`.
-# MAGIC Resource IDs are flattened only in the consumer view `vf_pbi_billing_cost`.
+# MAGIC **`usage_metadata`** is stored as a raw struct in `tf_billing_usage`. Resource IDs are
+# MAGIC flattened downstream, not here — in the consumer view `vf_pbi_billing_cost`, and in the
+# MAGIC attribution MVs (`silver_query_cost_attribution.sql` / `silver_serving_cost_attribution.sql`,
+# MAGIC which read `usage_metadata.warehouse_id` / `.endpoint_id` off `tf_billing_cost`).
 # MAGIC
 # MAGIC **Replaces:** `silver_billing_usage.sql`, `silver_billing_list_prices.sql`
 # MAGIC

@@ -3,7 +3,8 @@
 -- MAGIC %md
 -- MAGIC ## DLT — Query Cost Attribution (Materialized View)
 -- MAGIC
--- MAGIC Single-MV pipeline. Allocates each warehouse-day's billed cost (`tf_billing_cost`)
+-- MAGIC Single-MV notebook in the `attributed_cost` pipeline. Allocates each warehouse-day's
+-- MAGIC billed cost (`tf_billing_cost`)
 -- MAGIC across the statements that ran on that warehouse that day (`tf_query_history`),
 -- MAGIC proportionally to billable duration.
 -- MAGIC
@@ -27,8 +28,8 @@
 -- MAGIC   to the queries already holding capacity). Result-cache hits get weight 0.
 -- MAGIC - **All execution statuses kept** (FAILED/CANCELED consumed compute) — slice in Power BI.
 -- MAGIC - **No date window** — full history; each pipeline update recomputes incrementally where
--- MAGIC   possible. Force a full recompute with the `query-cost-full-refresh` job (or a
--- MAGIC   full-refresh trigger in the pipeline UI).
+-- MAGIC   possible. Force a full recompute with the `attributed-cost-full-refresh` job (or a
+-- MAGIC   full-refresh trigger in the pipeline UI) — it refreshes every MV in this pipeline.
 -- MAGIC
 -- MAGIC Attribution is non-incremental at the day level (a late statement changes the allocation
 -- MAGIC denominator for the whole warehouse-day; a billing restatement changes the pool) — the

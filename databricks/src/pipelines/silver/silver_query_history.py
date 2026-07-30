@@ -18,8 +18,9 @@
 # MAGIC - `system.query.history` is **regional**: each workspace sees only queries from its own region.
 # MAGIC   `{bronze_schema}.query_history` is populated externally (outside this repo) across all
 # MAGIC   workspaces before this pipeline runs.
-# MAGIC - `compute` and `query_source` are kept as **raw structs** — flatten warehouse_id / resource IDs
-# MAGIC   in a consumer view (`vf_pbi_query_history` or equivalent).
+# MAGIC - `compute` and `query_source` are passed through **unparsed** — flatten warehouse_id /
+# MAGIC   resource IDs downstream: `vf_pbi_query_cost` (gold) and `mvf_query_cost_attribution`
+# MAGIC   (`silver_query_cost_attribution.sql`) both do.
 # MAGIC - `statement_text` and `error_message` are excluded — both may be encrypted when customer-managed
 # MAGIC   keys are configured and have limited analytics value in aggregated cost reporting.
 # MAGIC - `update_time` is the sequence key: records are immutable once `execution_status` is final, but
@@ -99,7 +100,7 @@ dp.create_streaming_table(
     comment=(
         "Silver fact table of Databricks query history (system.query.history). "
         "One row per statement execution, account-level. "
-        "compute and query_source are raw structs — flatten in consumer views."
+        "compute and query_source are passed through unparsed — flatten in consumer views."
     ),
 )
 
